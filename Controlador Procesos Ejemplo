@@ -1,0 +1,125 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using BTU_Matrices.Models;
+
+namespace BTU_Matrices.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProcesosSHController : ControllerBase
+    {
+        private readonly DbWebttcSqlContext _context;
+
+        public ProcesosSHController(DbWebttcSqlContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/ProcesosSH
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<BtuMtzShProceso>>> GetBtuMtzShProcesos()
+        {
+            return await _context.BtuMtzShProcesos.ToListAsync();
+        }
+
+        // GET: api/ProcesosSH/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<BtuMtzShProceso>> GetBtuMtzShProceso(int id)
+        {
+            var btuMtzShProceso = await _context.BtuMtzShProcesos.FindAsync(id);
+
+            if (btuMtzShProceso == null)
+            {
+                return NotFound();
+            }
+
+            return btuMtzShProceso;
+        }
+
+        // Metodo para enviar todos los procesos
+        [HttpGet("GetNombresProcesos")]
+        public async Task<ActionResult<IEnumerable<string>>> GetNombresProcesos()
+        {
+            try
+            {
+                var nombresProcesos = (from p in _context.BtuMtzShProcesos select p).ToList();
+
+
+                return Ok(nombresProcesos);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Metodo para agregar nuevos procesos
+        [HttpPost("AgregarProcesos")]
+        public async Task<IActionResult> AgregarProcesos(string nombreProceso)
+        {
+            try
+            {
+                // Verificar si el nombre del proceso no está vacío
+                if (string.IsNullOrEmpty(nombreProceso))
+                {
+                    return BadRequest("El nombre del proceso no puede estar vacío.");
+                }
+
+                // Crear una nueva instancia del objeto Proceso con el nombre proporcionado
+                var nuevoProceso = new BtuMtzShProceso
+                {
+                    NombreProceso = nombreProceso
+                };
+
+                // Agregar el nuevo proceso a la base de datos
+                _context.BtuMtzShProcesos.Add(nuevoProceso);
+                await _context.SaveChangesAsync();
+
+                // Devolver un mensaje de éxito
+                return Ok("Proceso agregado correctamente.");
+            }
+            catch (Exception ex)
+            {
+                // Devolver un mensaje de error en caso de excepción
+                return BadRequest($"Error al agregar el proceso: {ex.Message}");
+            }
+        }
+
+        // POST: api/ProcesosSH
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<BtuMtzShProceso>> PostBtuMtzShProceso(BtuMtzShProceso btuMtzShProceso)
+        {
+            _context.BtuMtzShProcesos.Add(btuMtzShProceso);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetBtuMtzShProceso", new { id = btuMtzShProceso.IdProceso }, btuMtzShProceso);
+        }
+
+        // DELETE: api/ProcesosSH/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBtuMtzShProceso(int id)
+        {
+            var btuMtzShProceso = await _context.BtuMtzShProcesos.FindAsync(id);
+            if (btuMtzShProceso == null)
+            {
+                return NotFound();
+            }
+
+            _context.BtuMtzShProcesos.Remove(btuMtzShProceso);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool BtuMtzShProcesoExists(int id)
+        {
+            return _context.BtuMtzShProcesos.Any(e => e.IdProceso == id);
+        }
+    }
+}
