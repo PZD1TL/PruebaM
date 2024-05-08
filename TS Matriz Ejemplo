@@ -1,0 +1,791 @@
+import { Router } from '@angular/router';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { Location } from '@angular/common';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { ServiceBackService } from '../service-back.service';
+import { ConfirmationModalComponent } from '../confirmation-modal/confirmation-modal.component';
+import { HttpErrorResponse } from '@angular/common/http';
+import { SuccessModalComponent } from '../success-modal/success-modal.component';
+import { ErrorModalComponent } from '../error-modal/error-modal.component';
+import { DeleteModalComponent } from '../delete-modal/delete-modal.component';
+import { AddTechnoModalComponent } from '../add-techno-modal/add-techno-modal.component';
+
+@Component({
+  selector: 'app-matriz-mse-sh',
+  templateUrl: './matriz-mse-sh.component.html',
+  styleUrls: ['./matriz-mse-sh.component.css']
+})
+export class MatrizMseShComponent implements OnInit {
+  procesos: any[] = [];
+  asocNivTec: any[] = [];
+  tecnologias: any[] = [];
+  niveles: any[] = [];
+  //asociados: any[] = [];
+
+  apiUrl = 'http://localhost:5277/api/'; // URL base para las solicitudes HTTP al backend
+
+  // Variable para controlar la recarga de la página
+  private recargarPagina: boolean = false;
+
+  cambiosPendientes: boolean[] = Array(40).fill(false); // Array para controlar cambios pendientes de los niveles
+
+  editingTecnologia = false; // Indica si se está editando una tecnología
+  editingPrioridad: boolean = false; // Indica si se está editando la prioridad de una tecnología
+  tecnologiaEditNombre = ''; // Nombre de la tecnología en edición
+  tecnologiaEditPrioridad = 0; // Prioridad de la tecnología en edición
+  editingTecnologiaIndex = -1; // Índice del elemento en edición, -1 si no se está editando
+  editingPrioridadIndex = -1; // Índice del elemento en edición de prioridad, -1 si no se está editando
+
+  tecnologiaEdit: { NombreTecno?: string; Prioridad?: number }[] = Array(
+    40
+  ).fill({ NombreTecno: '', Prioridad: 0 }); // Array para almacenar tecnologías en edición
+
+  listaprocesos: any = [];
+  nivel: any = [];
+
+  modalRef: NgbModalRef | undefined;
+
+  register: any = [];
+  optionSelected: string[][] = [];
+  idProcess: any; 
+  allLevels: any = [];  
+
+  nombresAsociados: any[] = [];
+  nombresFiltrados: any[] = [];
+  searchText: string = '';
+
+  nombresProcesos: any[] = [];
+
+  nuevoAsociado: any;
+
+  mostrarCampo: boolean = false;
+  nuevoProceso: string = '';
+  
+
+  title = 'Matriz MSE-SH';
+  @ViewChild('infoDiv') infoDiv: ElementRef | undefined;
+
+  constructor(
+    private serviceBack: ServiceBackService,
+    private location: Location,
+    private router: Router,
+    private modalService: NgbModal
+  ) {}
+
+  toggleInputField(): void {
+    this.mostrarCampo = !this.mostrarCampo;
+  }
+
+  // Obtener los metodos necesarios del servicio
+  ngOnInit() {
+
+    this.serviceBack.obtenerNombresAsociados().subscribe(
+      nombres => {
+        this.nombresAsociados = nombres; 
+        this.filtrarNombres();
+
+        console.log(nombres);
+      },
+      error => {
+        console.error('Error al obtener nombres de asociados:', error);
+      }
+    );
+
+    this.serviceBack.obtenerNombresProcesosSH().subscribe(
+      nombresProcesos => {
+        this.nombresProcesos = nombresProcesos;
+        console.log(this.nombresProcesos);
+      },
+      error => {
+        console.error('Error al obtener los nombres de los procesos:', error);
+      }
+    );
+
+    this.serviceBack.obtenerNivSH().then((result) => {
+      this.allLevels = result;
+    });
+
+    this.serviceBack.obtenerAsocNivTecSH().then((Response) => {
+      this.asocNivTec = Response;
+      console.log(this.asocNivTec.length);
+      
+      for (var i = 0; i < Response.length; i++) {
+        this.register.push([]);
+        for (let element of Response[i]) {
+          this.nivel.push({ nivel: element.nivel });
+          this.register[i].push({ nivel: element.nivel });
+        }
+      }
+      //console.log(this.nivel);
+
+      // Array que contiene los datos relevantes de distintas tablas que recibimos del backend
+      this.asocNivTec[0].forEach((p: any) => {
+        this.listaprocesos.push({
+          id: p.id,
+          proceso: p.proceso,
+          tecnologia: p.tecnologia,
+          prioridad: p.prioridad,
+          nivel: p.nivel,
+          IdAsociado: p.IdAsociado,
+          idTecno: p.idTecno,
+          idProceso: p.idProceso
+        });
+       // console.log(this.asocNivTec);
+      });
+    });
+    // Inicializa las matrices con los valores iniciales
+    //this.cargarDatosIniciales();
+  }
+
+  // Carga las tecnologías 
+  loadTecnologias(): void {
+    this.serviceBack.obtenerTecnologiasSH().subscribe((data) => {
+      this.tecnologias = [...data]; // Utiliza el operador de propagación para asignar el valor
+     /* this.tecnologiaEditNombre =
+        this.tecnologias.length > 0 ? this.tecnologias[0].NombreTecno : '';
+      this.tecnologiaEditPrioridad =
+        this.tecnologias.length > 0 ? this.tecnologias[0].Prioridad : 0; */
+    });
+  }
+
+  // Método para cargar datos
+  cargarDatos() {
+    this.cargarDatosIniciales();
+  }
+
+  // Carga los datos del backend
+  cargarDatosIniciales() {
+    this.serviceBack.obtenerAsocNivTecSH().then((Response) => {
+      console.log('Datos asignados a asocNivTec:', Response);
+      this.asocNivTec = Response;
+    });
+    console.log(this.asocNivTec);
+    console.log(this.asocNivTec[1].asociado);
+
+  }
+
+  // Error al obtener datos del backend
+  handleDataError(dataType: string, error: any) {
+    console.error(`Error al obtener ${dataType}:`, error);
+  }
+
+  // Permite el despliegue de opciones de agregado de asociados 
+  toggleInfo() {
+    if (this.infoDiv) {
+      const infoDivStyle = this.infoDiv.nativeElement.style;
+      infoDivStyle.display =
+        infoDivStyle.display === 'none' || infoDivStyle.display === ''
+          ? 'block'
+          : 'none';
+    }
+  }
+
+  filtrarNombres(): void {
+    if (!this.searchText.trim()) {
+      this.nombresFiltrados = this.nombresAsociados; // Si el campo de búsqueda está vacío, muestra todos los nombres
+    } else {
+      this.nombresFiltrados = this.nombresAsociados.filter(nombre =>
+        nombre.nombre.toLowerCase().includes(this.searchText.toLowerCase().trim())
+      );
+    }
+    console.log('Nombres filtrados:', this.nombresFiltrados); // Verifica los nombres filtrados
+  }
+
+  // Actualiza "listaprocesos" con el nuevo proceso seleccionado
+updateProcess( index:any){
+  console.log(this.idProcess);
+  
+var updateProcesses = this.listaprocesos
+this.listaprocesos[index].idProceso = parseInt(this.idProcess) 
+console.log(updateProcesses, this.listaprocesos);
+
+}
+
+ // Enviar el id del proceso y su tecnologia corerspondiente para el respectivo cambio del proceso
+ cambiarProceso(index: number): void {
+  const nuevoIdProceso = this.listaprocesos[index].idProceso;
+  const idTecnologia = this.listaprocesos[index].idTecno;
+
+  console.log('ID de Tecnología:', idTecnologia);
+  console.log('Nuevo ID de Proceso:', nuevoIdProceso);
+
+  // Verifica si se ha seleccionado un proceso
+  if (nuevoIdProceso) {
+    var values = new FormData();
+    values.append('idTecnologia',idTecnologia)
+    values.append('nuevoIdProceso',nuevoIdProceso)
+
+    // Envía la solicitud para actualizar el proceso en el backend
+    this.serviceBack.actualizarIdProcesoSH(values)
+    .subscribe(
+      (response: any) => {
+        // Verificar si la respuesta contiene un cuerpo de datos
+        if (response && response.data) {
+          
+          console.log('Proceso cambiado con éxito');
+          this.openSuccessModal(3000, 'El nombre del proceso se cambió con éxito');
+        } else {
+
+          console.error('Error al cambiar el proceso:', response.error);
+          this.openErrorModal('Ocurrió un error al cambiar el proceso. Por favor, inténtelo más tarde.');
+        }
+      },
+      (error: any) => {
+        console.log('Proceso cambiado con éxito');
+        this.openSuccessModal(3000, 'El nombre del proceso se cambió con éxito');
+        setTimeout(() => {
+          location.reload(); // Recargar la página después de 3 segundos
+        }, 3000);  
+      }
+    );
+  }
+}
+
+  // Agregar nuevo Asociado a la Matriz
+  AddNew(){
+    console.log(this.nuevoAsociado);
+    var values = new FormData();
+    values.append('id', this.nuevoAsociado)
+    this.serviceBack.AddUserSH(values).then((resolve: any)=>{
+      console.log(resolve);
+      if (resolve === 1){
+        location.reload()
+      }
+    })
+  }
+
+  // Obtener todos los nombres de asociados del Head Count
+  obtenerNombresAsociados(): void {
+    this.serviceBack.obtenerNombresAsociados().subscribe(
+      nombres => {
+        this.nombresAsociados = nombres;
+      },
+      error => {
+        console.error('Error al obtener los nombres de asociados:', error);
+      }
+    );
+  }
+  
+  // Agregar nuevo proceso a la base de datos
+  agregarProceso(): void {
+    console.log('Agregando proceso:', this.nuevoProceso.trim());
+    if (this.nuevoProceso.trim() !== '') {
+      this.serviceBack.agregarProcesoSH(this.nuevoProceso.trim())
+        .subscribe(
+          () => {
+            console.log('Proceso agregado exitosamente');
+            this.openSuccessModal(3000, 'Proceso agregado exitosamente');
+          },
+          error => {
+            console.error('Error al agregar el proceso:', error);
+            this.openErrorModal(
+              'Ocurrio un error al agregar el proceso. Intentelo mas tarde'
+            );
+          }
+        );
+    } else {
+      console.error('El nombre del proceso no puede estar vacío');
+    }
+  }
+  
+  openTechnoModal() {
+    console.log('Abriendo modal para agregar tecnologia');
+
+    console.log(this.asocNivTec);
+
+    const modalRef = this.modalService.open(AddTechnoModalComponent, {
+      size: 'lg',
+      centered: true,
+      windowClass: 'modal-extra-large',
+    });
+
+    // Mostrar mensaje en el modal
+    modalRef.componentInstance.message =
+      'Seleccione una tecnologia existente';
+
+      modalRef.result.then(
+        (result) => {
+          // El usuario confirma el guardado de niveles
+          if (result === 'confirm') { 
+            
+          } else {
+            // El usuario canceló
+            console.log('Cambios cancelados por el usuario.');
+          }
+        },
+        () => {
+          // El modal se cerró sin una confirmación explícita
+          console.log('Modal cerrado sin confirmación explícita.');
+        }
+      );
+  }
+
+  // Abrir el modal de confirmacion para guardar cambios en los niveles
+  openConfirmationModal() {
+    console.log('Abriendo modal de confirmación');
+
+    console.log(this.asocNivTec);
+
+    const modalRef = this.modalService.open(ConfirmationModalComponent, {
+      size: 'lg',
+      centered: true,
+      windowClass: 'modal-extra-large',
+    });
+
+    // Mostrar mensaje en el modal
+    modalRef.componentInstance.message =
+      '¿Desea realizar los cambios a la matriz?';
+
+    let cambiosRealizados = false; // Bandera para indicar si se realizaron cambios
+
+    modalRef.result.then(
+      (result) => {
+        //El usuario confirma el guardado de niveles
+        if (result === 'confirm') { 
+          // Actualiza la matriz 'asocNivTec' con los niveles de 'register'
+          for (let i = 0; i < this.asocNivTec.length; i++) {
+            for (let j = 0; j < this.asocNivTec[i].length; j++) {
+              // Detectar cambio en algun nivel para mostrar modal de error en caso de que no haya cambio alguno
+              if (this.asocNivTec[i][j].nivel !== this.register[i][j].nivel) {
+                cambiosRealizados = true; // Se detectó un cambio
+                this.asocNivTec[i][j].nivel = this.register[i][j].nivel;
+              }
+            }
+          }
+
+          console.log('Matriz actualizada:', this.asocNivTec);
+
+          // Envía los cambios al backend solo si se realizaron cambios
+          if (cambiosRealizados) {
+            this.enviarCambiosAlBackend();
+          } else {
+            // No se realizaron cambios, muestra el modal de error
+            this.openErrorModal(
+              'No se realizaron cambios en los niveles. Asegúrese de seleccionar al menos un nivel diferente'
+            );
+          }
+        } else {
+          // El usuario canceló
+          console.log('Cambios cancelados por el usuario.');
+        }
+      },
+      () => {
+        // El modal se cerró sin una confirmación explícita
+        console.log('Modal cerrado sin confirmación explícita.');
+      }
+    );
+  }
+
+  enviarCambiosAlBackend() {
+    let cambiosRealizados = false; // Inicializa la bandera de cambios
+
+    // Itera sobre la matriz 'asocNivTec' para enviar los cambios al backend
+    this.asocNivTec.forEach(async (fila: any[], indiceFila: number) => {
+      fila.forEach(async (tecnologia: any) => {
+        // Extrae el ID del asociado y el nuevo nivel
+        const idAsociado = tecnologia.idMain;
+        const nuevoNivel = tecnologia.nivel;
+
+        try {
+          // Llama al endpoint 'ActualizarNivel' para actualizar el nivel en el backend
+          await this.serviceBack
+            .actualizarNivelEnBackendSH(idAsociado, nuevoNivel)
+            .toPromise();
+          console.log(
+            `Nivel actualizado para Asociado: ${idAsociado}, Nuevo Nivel: ${nuevoNivel}`
+          );
+
+          // Marca que se realizaron cambios
+          cambiosRealizados = true;
+
+        } catch (error) {
+          console.error(
+            `Error al actualizar nivel para Asociado: ${idAsociado}, Nuevo Nivel: ${nuevoNivel}`,
+            error
+          );
+        }
+      });
+    });
+
+    // Si se realizaron cambios, muestra un mensaje de éxito y resetea el estado de edición
+    if ((cambiosRealizados = true)) {
+      this.openSuccessModal(3000, 'Los cambios fueron guardados exitosamente');
+    } else {
+      // No se realizaron cambios, muestra el modal de error
+      this.openErrorModal(
+        'No se realizaron cambios en los niveles. Asegúrese de seleccionar al menos un nivel diferente'
+      );
+    }
+  }
+
+  verificarCambiosNiveles(): boolean {
+    // Verifica si se realizaron cambios en los niveles
+    return this.cambiosPendientes.some((cambio) => cambio);
+  }
+
+  obtenerNombreNivel(idNivel: string | undefined): string {
+    // Busca el nombre del nivel correspondiente al IdNivel de la Base de Datos. Ejemplo: IdNIvel: 3 = L2
+    const nivel = this.niveles.find((nivel) => nivel.IdNivel === idNivel);
+    return nivel ? nivel.NombreNivel : '';
+  }
+
+  obtenerNombreProceso(idProceso: number): string {
+    // Busca el nombre del proceso correspondiente al IdProceso de la Base de Datos. Ejemplo: IdProceso: 1 = Control
+    const proceso = this.procesos.find(
+      (proceso) => proceso.IdProceso === idProceso
+    );
+    return proceso ? proceso.NombreProceso : '';
+  }
+
+  // Opciones del menu desplegable de cambio de niveles
+  obtenerOpcionesSelect(): { value: string; label: string }[] {
+    return [
+      { value: 'opcion1', label: 'L1' },
+      { value: 'opcion2', label: 'L1/L2' },
+      { value: 'opcion3', label: 'L2' },
+      { value: 'opcion4', label: 'L2/L3' },
+      { value: 'opcion5', label: 'L3' },
+      { value: 'opcion6', label: 'L3/L4' },
+      { value: 'opcion7', label: 'L4' },
+    ];
+  }
+
+  //Cambiar color de celda segun el nivel seleccionado (NO FUNCIONAL)
+  getColorCelda(option: string): string {
+    let colorCelda = '';
+
+    switch (option) {
+      case "L1":
+        colorCelda = '#ffffff';
+        break;
+      case "L1/L2":
+        colorCelda = '#ffa500';
+        break;
+      case "L2":
+        colorCelda = '#f0ff00';
+        break;
+      case "L2/L3":
+        colorCelda = '#ffa500';
+        break;
+      case "L3":
+        colorCelda = '#00ff8e';
+        break;
+      case "L3/L4":
+        colorCelda = '#ffa500';
+        break;
+      case "L4":
+        colorCelda = '#26ff00';
+        break;
+    }
+
+    return colorCelda;
+}
+
+ // Verifica si se está editando la tecnología en el índice proporcionado
+  isEditingTecnologia(index: number): boolean {
+    return this.editingTecnologiaIndex === index;
+  }
+
+  // Verifica si se está editando la prioridad en el índice proporcionado
+  isEditingPrioridad(index: number): boolean {
+    return this.editingPrioridadIndex === index;
+  }
+
+  // Función para iniciar la edición de la tecnologia o prioridad
+  startEditing(index: number, attribute: string): void {
+    console.log(index, attribute);
+
+    // Inicia la edición del elemento en el índice proporcionado
+    this.editingTecnologiaIndex = index;
+
+    // Verifica si se está editando el nombre de la tecnología o la prioridad
+    if (attribute === 'NombreTecno') {
+      this.tecnologiaEdit[index]['NombreTecno'] =
+        this.tecnologias[index].NombreTecno;
+    } else if (attribute === 'Prioridad') {
+      this.tecnologiaEdit[index]['Prioridad'] =
+        this.tecnologias[index].Prioridad;
+    }
+
+  // Establece editingTecnologia en true para indicar que se está editando
+  this.editingTecnologia = true;
+  }
+
+  // Actualiza la tecnología con el nuevo valor en el atributo especificado
+  updateTecnologia(id: number, nuevoValor: any, atributo: any): void {
+    switch (atributo) {
+      // En el caso del nombre de la tecnologia
+      case 1:
+        var type = 'NombreTecno';
+        console.log('updateTecnologia called');
+
+        // Define los cambios a realizar
+        const cambios = { IdTecno: id, Atributo: type, NuevoValor: nuevoValor };
+        console.log('Cambio:', cambios);
+
+        // Realiza la solicitud HTTP para actualizar la tecnología
+        this.serviceBack.updateTecnologiaSH(id, cambios).subscribe(
+          (response) => {
+            // Abre un modal de éxito si la solicitud es exitosa
+            this.openSuccessModal(
+              3000,
+              'Los cambios fueron guardados exitosamente'
+            );
+            console.log(
+              `updateTecnologia (${cambios.Atributo}) response:`,
+              response
+            );
+            // Recarga las tecnologías después de la actualización
+            this.loadTecnologias();
+          },
+          (error) => {
+            console.error(
+              `updateTecnologia (${cambios.Atributo}) error:`,
+              error
+            );
+
+            // Imprime el cuerpo de la respuesta del servidor en caso de error
+            if (error instanceof HttpErrorResponse && error.error) {
+              console.error('Error Response Body:', error.error);
+            }
+          }
+        );
+        this.resetEditingState();
+        break;
+        // En el caso de la prioridad
+      case 2:
+        var type = 'Prioridad';
+        console.log('updateTecnologia called');
+
+        const cambios1 = {
+          IdTecno: id,
+          Atributo: type,
+          NuevoValor: nuevoValor !== undefined ? nuevoValor : null,
+        };
+        console.log('Cambio:', cambios1);
+
+        this.serviceBack.updateTecnologiaSH(id, cambios1).subscribe(
+          (response) => {
+            this.openSuccessModal(
+              3000,
+              'Los cambios fueron guardados exitosamente'
+            );
+            console.log(
+              `updateTecnologia (${cambios1.Atributo}) response:`,
+              response
+            );
+            this.loadTecnologias();
+          },
+          (error) => {
+            console.error(
+              `updateTecnologia (${cambios1.Atributo}) error:`,
+              error
+            );
+
+            // Imprime el cuerpo de la respuesta del servidor en caso de error
+            if (error instanceof HttpErrorResponse && error.error) {
+              console.error('Error Response Body:', error.error);
+            }
+          }
+        );
+        // Restablece el estado de edición después de la actualización
+        this.resetEditingState();
+        break;
+    }
+  }
+
+  // En caso de que ocurra un error al actualizar la tecnologia
+  private handleUpdateTecnologiaError(cambios: any, error: any): void {
+    console.error(`updateTecnologia (${cambios.Atributo}) error:`, error);
+
+    // Imprime el cuerpo de la respuesta del servidor
+    if (error instanceof HttpErrorResponse && error.error) {
+      console.error('Error Response Body:', error.error);
+    }
+  }
+
+  // Guardar los cambios realizados a las tecnologias y prioridades
+  saveChangesTecno(index: number, attribute: string): void {
+    // Si no estás editando, no hagas nada
+    if (this.editingTecnologiaIndex === -1) {
+      console.log('Validacion');
+      return;
+    }
+
+    const tecnologiaActual = this.listaprocesos[this.editingTecnologiaIndex];
+
+    // Verifica si se realizaron cambios en el campo de texto
+    if (
+      !tecnologiaActual ||
+      !this.tecnologiaEdit[this.editingTecnologiaIndex]
+    ) {
+      // No hay cambios o el objeto no está definido, muestra un modal de error
+      this.openErrorModal('No se realizaron cambios en la tecnología.');
+      return;
+    }
+
+    // Obtiene el valor del atributo de tecnologiaEdit
+    const attributeValue: string | number | undefined =
+      attribute === 'NombreTecno'
+        ? this.tecnologiaEdit[index]?.NombreTecno
+        : this.tecnologiaEdit[index]?.Prioridad;
+
+    // Verifica si la propiedad está definida en tecnologiaEdit
+    if (attributeValue !== undefined) {
+      // Actualiza el valor en el array según el atributo (NombreTecno o Prioridad)
+
+      tecnologiaActual.tecnologia = attributeValue as string;
+
+      // Muestra un mensaje de éxito
+      this.openSuccessModal(3000, 'Los cambios fueron guardados exitosamente');
+
+      // Restablece las variables de edición
+      this.resetEditingState();
+    }
+  }
+
+  //Funcion paar abrir modal de advertencia para eliminar asociados
+  openDeleteModal(idAsociado: number): void {
+    console.log('ID de asociado:', idAsociado);
+
+    const modalRef = this.modalService.open(DeleteModalComponent, {
+          size: 'lg',
+          centered: true,
+          windowClass: 'modal-extra-large',
+        } ); 
+    modalRef.componentInstance.message = 'Esta a punto de eliminar a este asociado y sus respectivos registros de esta Matriz. Una vez eliminado no podra recuperar los datos. ¿Desea eliminar al asociado?'; // Pasa el mensaje al modal
+    modalRef.result.then((result) => {
+      if (result === 'confirm') {
+        this.eliminarAsociado(idAsociado);
+      }
+    }, (reason) => {
+      // El modal se cerró sin confirmar la eliminación
+      console.log('Modal cerrado sin confirmación:', reason);
+    });
+  }
+
+  // Mandar la solicitud de eliminacion de asociado al backend
+  eliminarAsociado(idAsociado: number): void {
+    console.log('Intentando eliminar el asociado con ID:', idAsociado);
+
+    this.serviceBack.eliminarAsociadoSH(idAsociado).subscribe(
+      () => {
+        // Eliminación exitosa
+        console.log('Asociado eliminado correctamente');
+        this.openSuccessModal(3000, 'Asociado eliminado correctamente');
+        setTimeout(() => {
+          location.reload(); // Recargar la página después de 3 segundos
+        }, 3000);  
+      },
+      (error: HttpErrorResponse) => {
+        // Manejo de errores en caso de fallo en la eliminación
+        console.error('Error al eliminar el asociado:', error.message);
+        this.openErrorModal(
+          'Ocurrio un error al eliminar al asociado. Intentelo mas tarde'
+        );
+      }
+    );
+  }
+
+  // Funcion para abrir el modal de advertencia para eliminar tecnologias
+  openDeleteModalTec(idTecnologia: number, nombreTecnologia: string, indice: number): void {
+    console.log('ID de tecnología:', idTecnologia);
+    console.log('Nombre de tecnología:', nombreTecnologia);
+
+    const modalRef = this.modalService.open(DeleteModalComponent, {
+      size: 'lg',
+      centered: true,
+      windowClass: 'modal-extra-large',
+    });
+  
+    modalRef.componentInstance.message ='Esta a punto de eliminar la tecnologia y sus respectivos registros de esta Matriz. Una vez eliminada no podra recuperar los datos. ¿Desea eliminar la tecnologia?';
+    modalRef.result.then((result) => {
+      if (result === 'confirm') {
+        this.eliminarTecnologia(idTecnologia, indice);
+      }
+    }, (reason) => {
+      console.log('Modal cerrado sin confirmación:', reason);
+    });
+  }
+  
+  // Funcion para mandar la solicitud de eliminacion de tecnologia 
+  eliminarTecnologia(idTecnologia: number, indice: number): void {
+    console.log('Intentando eliminar la tecnología con ID:', idTecnologia);
+  
+    this.serviceBack.eliminarTecnologiaSH(idTecnologia).subscribe(
+      () => {
+        console.log('Tecnología eliminada correctamente');
+        this.openSuccessModal(3000, 'Tecnología eliminada correctamente');
+        // Eliminar la tecnología del array local
+      this.listaprocesos.splice(indice, 1);
+      },
+      (error: HttpErrorResponse) => {
+        console.error('Error al eliminar la tecnología:', error.message);
+        this.openErrorModal('Ocurrió un error al eliminar la tecnología. Inténtelo de nuevo más tarde');
+      }
+    );
+  }
+  
+  // Función para abrir el modal de éxito
+  openSuccessModal(timeout: number, message: string): void {
+    // Abre el modal de éxito
+    this.modalRef = this.modalService.open(SuccessModalComponent, {
+      centered: true,
+    });
+
+    // Pasa el mensaje al componente del modal
+    this.modalRef.componentInstance.message = message;
+
+    // Cierra el modal después de un cierto tiempo (timeout en milisegundos)
+    setTimeout(() => {
+      if (this.modalRef) {
+        this.modalRef.close();
+      }
+    }, timeout);
+  }
+
+  // Función para abrir el modal de error
+  openErrorModal(message: string) {
+    const modalRef = this.modalService.open(ErrorModalComponent, {
+      centered: true,
+    });
+
+    // Pasa el mensaje al componente del modal de error
+    modalRef.componentInstance.message = message;
+  }
+
+  // Restablece las variables de edición y el índice, establece editingTecnologia y prioridad en false
+  resetEditingState(): void {
+    this.tecnologiaEditNombre = '';
+    this.tecnologiaEditPrioridad = 0;
+    this.editingTecnologiaIndex = -1;
+    this.editingPrioridadIndex = -1;
+    this.editingTecnologia = false;
+    this.editingPrioridad = false;
+  }
+
+  startEditingPrioridad(index: number): void {
+    // Inicia la edición de la prioridad del elemento en el índice proporcionado
+    this.editingPrioridadIndex = index;
+    this.editingPrioridad = true;
+    this.tecnologiaEditPrioridad = this.listaprocesos[index].prioridad;
+    // Inicia el valor de edición según la prioridad
+    this.tecnologiaEdit[index]['Prioridad'] =
+      this.listaprocesos[index].prioridad;
+  }
+
+  // Cambia el nivel en la matriz de registros
+  cambiarNivel(data2: any, i: number, k: number) {
+    // Actualiza el nivel en la posición correspondiente de la matriz de registros
+    this.register[k][i].nivel = data2;
+  }
+
+  validacion(data1: any, data2: any, data3: any): boolean {
+    var nuevo = this.register[data2][data3].nivel;    // Obtiene el nuevo nivel de la matriz de registros
+    if (data1 != nuevo) {       // Compara el nuevo nivel con el nivel anterior
+      return true;        // Devuelve true si el nivel ha cambiado
+    } else {
+      return false;       // Devuelve false si el nivel no ha cambiado
+    }
+  }
+}
