@@ -1,0 +1,80 @@
+USE DB_WEBTTC_SQL
+
+
+--Tabla Procesos
+SELECT * FROM dbo.BTU_MTZ_SH_Procesos
+
+CREATE TABLE dbo.BTU_MTZ_SH_Procesos (
+ IdProceso int IDENTITY(1,1) PRIMARY KEY,
+ NombreProceso varchar (30) NOT NULL,
+);
+
+INSERT INTO dbo.BTU_MTZ_SH_Procesos (NombreProceso) 
+VALUES ('TEF3');
+
+DELETE FROM BTU_MTZ_SH_Procesos
+WHERE IdProceso = 5
+
+--Tabla Tecnologias
+SELECT * FROM dbo.BTU_MTZ_SH_Tecnologias
+
+CREATE TABLE dbo.BTU_MTZ_SH_Tecnologias (
+    IdTecno INT IDENTITY(1,1) PRIMARY KEY,
+    IdProceso INT NOT NULL,
+    NombreTecno VARCHAR(150) NOT NULL,
+    Prioridad INT,
+    FOREIGN KEY (IdProceso) REFERENCES dbo.BTU_MTZ_SH_Procesos(IdProceso)
+);
+
+INSERT INTO dbo.BTU_MTZ_SH_Tecnologias (IdProceso, NombreTecno, Prioridad) 
+VALUES (8, 'Robots Kuka Mantenimiento (SH, WS, PA, CA, CO)', 0);
+
+--Tabla Asociados
+SELECT * FROM dbo.BTU_MTZ_SH_Asociados
+
+CREATE TABLE dbo.BTU_MTZ_SH_Asociados (
+    Asociado INT IDENTITY(1,1) PRIMARY KEY,
+	idAsociado INT NOT NULL,
+    noAsociado INT NOT NULL,
+    nombreAsociado VARCHAR(50) NOT NULL,
+	--FOREIGN KEY (idAsociado) REFERENCES [dbo].[HRL2_ListaDigital_HeadCount](idAsociado)
+);
+
+INSERT INTO dbo.BTU_MTZ_SH_Asociados (idAsociado, noAsociado, nombreAsociado) 
+VALUES (4022, 91795594, 'MARTINEZ GOMEZ VICTOR MANUEL')
+
+
+DELETE FROM dbo.BTU_MTZ_SH_Asociados
+WHERE idAsociado = 7885;
+
+UPDATE dbo.BTU_MTZ_SH_Asociados
+SET nombreAsociado = ''
+WHERE Asociado = 8;
+
+
+--Tabla Informacion Conjunta (Completa)
+SELECT * FROM dbo.BTU_MTZ_SH_AsocNivTec
+
+SELECT * FROM dbo.BTU_MTZ_WS_S_AsocNivTec
+
+CREATE TABLE dbo.BTU_MTZ_SH_AsocNivTec (
+    MainId INT IDENTITY(1,1) PRIMARY KEY,
+	Asociado INT NOT NULL,
+	IdTecno INT NOT NULL,
+	IdNivel INT NOT NULL,
+    FOREIGN KEY (Asociado) REFERENCES dbo.BTU_MTZ_SH_Asociados (Asociado),
+	FOREIGN KEY (IdTecno) REFERENCES dbo.BTU_MTZ_SH_Tecnologias (IdTecno),
+	FOREIGN KEY (IdNivel) REFERENCES dbo.BTU_MTZ_Niveles (IdNivel)
+);
+
+INSERT INTO dbo.BTU_MTZ_SH_AsocNivTec (Asociado, IdTecno, IdNivel) 
+VALUES (4, 17, 7);
+
+
+--Mostrar toda la informacion relevante
+
+SELECT MainId, dbo.BTU_MTZ_SH_Procesos.NombreProceso,dbo.BTU_MTZ_SH_AsocNivTec.Asociado,nombreAsociado,NombreTecno,Prioridad,NombreNivel FROM  dbo.BTU_MTZ_SH_AsocNivTec
+  JOIN dbo.BTU_MTZ_SH_Asociados ON dbo.BTU_MTZ_SH_AsocNivTec.Asociado = dbo.BTU_MTZ_SH_Asociados.Asociado JOIN dbo.BTU_MTZ_SH_Tecnologias ON dbo.BTU_MTZ_SH_AsocNivTec.IdTecno = dbo.BTU_MTZ_SH_Tecnologias.IdTecno
+  JOIN dbo.BTU_MTZ_Niveles ON dbo.BTU_MTZ_SH_AsocNivTec.IdNivel = dbo.BTU_MTZ_Niveles.IdNivel JOIN dbo.BTU_MTZ_SH_Procesos ON dbo.BTU_MTZ_SH_Tecnologias.IdProceso = dbo.BTU_MTZ_SH_Procesos.IdProceso
+
+   WHERE nombreAsociado = ''
