@@ -1,0 +1,159 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using BTU_Matrices.Models;
+
+namespace BTU_Matrices.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class TecnologiasSHController : ControllerBase
+    {
+        private readonly DbWebttcSqlContext _context;
+
+        public TecnologiasSHController(DbWebttcSqlContext context)
+        {
+            _context = context;
+        }
+
+        public class ActualizarAtributoModelSH
+        {
+            public int Id { get; set; }
+            public string Atributo { get; set; }
+            public string NuevoValor { get; set; }
+        }
+
+        // Metodo para cambiar el nombre de la tecnologia o la prioridad por una nueva
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutBtuMtzSHTecnologia(int id, [FromBody] ActualizarAtributoModelSH cambios)
+        {
+            Console.WriteLine($"Received PUT request for ID: {id}, Atributo: {cambios.Atributo}, NuevoValor: {cambios.NuevoValor}");
+
+            if (id != cambios.Id)
+            {
+                return BadRequest(new { error = "La ID proporcionada en la URL no coincide con la ID en el cuerpo de la solicitud." });
+            }
+
+            var existingTecnologia = await _context.BtuMtzShTecnologias.FindAsync(id);
+
+            if (existingTecnologia == null)
+            {
+                return NotFound(new { error = "No se encontró ninguna tecnología con la ID proporcionada." });
+            }
+
+            // Verifica qué atributo se está actualizando y aplica los cambios correspondientes
+            switch (cambios.Atributo)
+            {
+                case "NombreTecno":
+                    existingTecnologia.NombreTecno = cambios.NuevoValor;
+                    break;
+                case "Prioridad":
+                    // Si el nuevo valor es null, establece la prioridad como null
+                    if (cambios.NuevoValor == null || string.IsNullOrWhiteSpace(cambios.NuevoValor))
+                    {
+                        existingTecnologia.Prioridad = null;
+                    }
+                    else
+                    {
+                        // Actualizar la nueva prioridad en la base de datos
+                        if (int.TryParse(cambios.NuevoValor, out int nuevaPrioridad))
+                        {
+                            existingTecnologia.Prioridad = nuevaPrioridad;
+                        }
+                        else
+                        {
+                            return BadRequest(new { error = "El valor de Prioridad no es un número válido." });
+                        }
+                    }
+                    break;
+                default:
+                    return BadRequest(new { error = "Atributo no válido." });
+            }
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Cambios guardados exitosamente", data = existingTecnologia });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BtuMtzShTecnologiaExists(id))
+                {
+                    return NotFound(new { error = "La tecnología ya no existe en la base de datos." });
+                }
+                else
+                {
+                    return StatusCode(500, new { error = "Ocurrió un error interno al guardar los cambios." });
+                }
+            }
+        }
+
+        // Metodo para cambiar un proceso
+        [HttpPost("actualizarIdProceso")]
+        public async Task<IActionResult> ActualizarIdProceso()
+        {
+            try
+            {
+                // Obtener los valores de idTecnologia y nuevoIdProceso de la solicitud
+                string idTecnologiaStr = Request.Form["idTecnologia"];
+                string nuevoIdProcesoStr = Request.Form["nuevoIdProceso"];
+
+                // Verificar si los valores son nulos o vacíos
+                if (string.IsNullOrEmpty(idTecnologiaStr) || string.IsNullOrEmpty(nuevoIdProcesoStr))
+                {
+                    return BadRequest("Los parámetros idTecnologia y nuevoIdProceso son obligatorios.");
+                }
+
+                // Convertir los valores a enteros
+                if (!int.TryParse(idTecnologiaStr, out int idTecnologia) || !int.TryParse(nuevoIdProcesoStr, out int nuevoIdProceso))
+                {
+                    return BadRequest("Los parámetros idTecnologia y nuevoIdProceso deben ser números enteros válidos.");
+                }
+
+                Console.WriteLine("Datos recibidos del frontend: idTecnologia = " + idTecnologia + ", nuevoIdProceso = " + nuevoIdProceso);
+
+                var tecnologia = await _context.BtuMtzShTecnologias.FirstOrDefaultAsync(t => t.IdTecno == idTecnologia);
+                if (tecnologia == null)
+                {
+                    return NotFound();
+                }
+
+                // Actualizar el valor de IdProceso en la tabla BTU_MTZ_WS_S_Tecnologias en la base de datos
+                tecnologia.IdProceso = nuevoIdProceso;
+                await _context.SaveChangesAsync();
+
+                return Ok("Proceso actualizado correctamente en la base de datos.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al actualizar Proceso en la base de datos: " + ex.Message);
+                return BadRequest($"Error al actualizar Proceso en la base de datos: {ex.Message}");
+            }
+        }
+
+        // DELETE: api/TecnologiasSH/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBtuMtzShTecnologia(int id)
+        {
+            var btuMtzShTecnologia = await _context.BtuMtzShTecnologias.FindAsync(id);
+            if (btuMtzShTecnologia == null)
+            {
+                return NotFound();
+            }
+
+            _context.BtuMtzShTecnologias.Remove(btuMtzShTecnologia);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool BtuMtzShTecnologiaExists(int id)
+        {
+            return _context.BtuMtzShTecnologias.Any(e => e.IdTecno == id);
+        }
+    }
+}
