@@ -1,0 +1,498 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using BTU_Matrices.Models;
+
+namespace BTU_Matrices.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class TecnologiasMatricesController : ControllerBase
+    {
+        private readonly DbWebttcSqlContext _context;
+
+        public TecnologiasMatricesController(DbWebttcSqlContext context)
+        {
+            _context = context;
+        }
+
+        // Metodo para enviar todas las tecnologias
+        [HttpGet("NombresTecnologias")]
+        public async Task<ActionResult> GetNombresTecnologias()
+        {
+            var nombresTecnologias = await _context.BtuTecnologias
+                .OrderBy(t => t.NombreTecno) // Ordenar por nombre directamente en la base de datos
+                .Select(t => new
+                {
+                    nombre = t.NombreTecno,
+                    id = t.IdTecno
+                })
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(nombresTecnologias);
+        }
+
+        // Agregar tecnologias a las Matrices
+        [HttpPost("agregarTecnologias")]
+        public async Task<ActionResult> PostTecnologias()
+        {
+            try
+            {
+                if (Request.Form.ContainsKey("id")) // Si se proporciona 'id', se usó el select
+                {
+                    string idA = Request.Form["id"];
+                    int idint = int.Parse(idA);
+                    string index = Request.Form["index"];
+                    int i = int.Parse(index);
+
+                    switch (i)
+                    {
+                        case 1:
+                            // Lógica para agregar tecnologías cuando this.url es 1
+                            var data1 = (from t in _context.BtuTecnologias where t.IdTecno == idint select t).FirstOrDefault();
+
+                            if (data1 != null)
+                            {
+                                // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                                BtuMtzWsSTecnologia a1 = new BtuMtzWsSTecnologia();
+                                a1.IdProceso = 1;
+                                a1.NombreTecno = data1.NombreTecno;
+                                a1.Prioridad = 0;
+                                _context.BtuMtzWsSTecnologias.Add(a1);
+                                await _context.SaveChangesAsync();
+
+                                var asoc1 = (from s in _context.BtuMtzWsSAsociados select s).ToList();
+                                foreach (var s in asoc1)
+                                {
+                                    BtuMtzWsSAsocNivTec n = new BtuMtzWsSAsocNivTec();
+                                    n.Asociado = s.Asociado;
+                                    n.IdTecno = a1.IdTecno;
+                                    n.IdNivel = 1;
+                                    _context.BtuMtzWsSAsocNivTecs.Add(n);
+                                }
+                                await _context.SaveChangesAsync();
+                                return Ok(1);
+                            }
+                            else
+                            {
+                                return Ok(-1);
+                            }
+
+                        case 2:
+                            // Lógica para agregar tecnologías cuando this.url es 2
+                            var data2 = (from t in _context.BtuTecnologias where t.IdTecno == idint select t).FirstOrDefault();
+
+                            if (data2 != null)
+                            {
+                                // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                                BtuMtzShTecnologia a2 = new BtuMtzShTecnologia();
+                                a2.IdProceso = 1;
+                                a2.NombreTecno = data2.NombreTecno;
+                                a2.Prioridad = 0;
+                                _context.BtuMtzShTecnologias.Add(a2);
+                                await _context.SaveChangesAsync();
+
+                                var asoc2 = (from s in _context.BtuMtzShAsociados select s).ToList();
+                                foreach (var s in asoc2)
+                                {
+                                    BtuMtzShAsocNivTec n = new BtuMtzShAsocNivTec();
+                                    n.Asociado = s.Asociado;
+                                    n.IdTecno = a2.IdTecno;
+                                    n.IdNivel = 1;
+                                    _context.BtuMtzShAsocNivTecs.Add(n);
+                                }
+                                await _context.SaveChangesAsync();
+                                return Ok(1);
+                            }
+                            else
+                            {
+                                return Ok(-1);
+                            }
+
+                        case 3:
+                            // Lógica para agregar tecnologías cuando this.url es 3
+                            var data3 = (from t in _context.BtuTecnologias where t.IdTecno == idint select t).FirstOrDefault();
+
+                            if (data3 != null)
+                            {
+                                // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                                BtuMtzL751Tecnologia a3 = new BtuMtzL751Tecnologia();
+                                a3.IdProceso = 1;
+                                a3.NombreTecno = data3.NombreTecno;
+                                a3.Prioridad = 0;
+                                _context.BtuMtzL751Tecnologias.Add(a3);
+                                await _context.SaveChangesAsync();
+
+                                var asoc3 = (from s in _context.BtuMtzL751Asociados select s).ToList();
+                                foreach (var s in asoc3)
+                                {
+                                    BtuMtzL751AsocNivTec n = new BtuMtzL751AsocNivTec();
+                                    n.Asociado = s.Asociado;
+                                    n.IdTecno = a3.IdTecno;
+                                    n.IdNivel = 1;
+                                    _context.BtuMtzL751AsocNivTecs.Add(n);
+                                }
+                                await _context.SaveChangesAsync();
+                                return Ok(1);
+                            }
+                            else
+                            {
+                                return Ok(-1);
+                            }
+
+                        case 4:
+                            // Lógica para agregar tecnologías cuando this.url es 4
+                            var data4 = (from t in _context.BtuTecnologias where t.IdTecno == idint select t).FirstOrDefault();
+
+                            if (data4 != null)
+                            {
+                                // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                                BtuMtzCaFpgTecnologia a4 = new BtuMtzCaFpgTecnologia();
+                                a4.IdProceso = 1;
+                                a4.NombreTecno = data4.NombreTecno;
+                                a4.Prioridad = 0;
+                                _context.BtuMtzCaFpgTecnologias.Add(a4);
+                                await _context.SaveChangesAsync();
+
+                                var asoc4 = (from s in _context.BtuMtzCaFpgAsociados select s).ToList();
+                                foreach (var s in asoc4)
+                                {
+                                    BtuMtzCaFpgAsocNivTec n = new BtuMtzCaFpgAsocNivTec();
+                                    n.Asociado = s.Asociado;
+                                    n.IdTecno = a4.IdTecno;
+                                    n.IdNivel = 1;
+                                    _context.BtuMtzCaFpgAsocNivTecs.Add(n);
+                                }
+                                await _context.SaveChangesAsync();
+                                return Ok(1);
+                            }
+                            else
+                            {
+                                return Ok(-1);
+                            }
+
+                        case 5:
+                            // Lógica para agregar tecnologías cuando this.url es 5
+                            var data5 = (from t in _context.BtuTecnologias where t.IdTecno == idint select t).FirstOrDefault();
+
+                            if (data5 != null)
+                            {
+                                // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                                BtuMtzLpsSemiautoTecnologia a5 = new BtuMtzLpsSemiautoTecnologia();
+                                a5.IdProceso = 1;
+                                a5.NombreTecno = data5.NombreTecno;
+                                a5.Prioridad = 0;
+                                _context.BtuMtzLpsSemiautoTecnologias.Add(a5);
+                                await _context.SaveChangesAsync();
+
+                                var asoc5 = (from s in _context.BtuMtzLpsSemiautoAsociados select s).ToList();
+                                foreach (var s in asoc5)
+                                {
+                                    BtuMtzLpsSemiautoAsocNivTec n = new BtuMtzLpsSemiautoAsocNivTec();
+                                    n.Asociado = s.Asociado;
+                                    n.IdTecno = a5.IdTecno;
+                                    n.IdNivel = 1;
+                                    _context.BtuMtzLpsSemiautoAsocNivTecs.Add(n);
+                                }
+                                await _context.SaveChangesAsync();
+                                return Ok(1);
+                            }
+                            else
+                            {
+                                return Ok(-1);
+                            }
+
+                        case 6:
+                            // Lógica para agregar tecnologías cuando this.url es 6
+                            var data6 = (from t in _context.BtuTecnologias where t.IdTecno == idint select t).FirstOrDefault();
+
+                            if (data6 != null)
+                            {
+                                // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                                BtuMtzLpsAutoTecnologia a6 = new BtuMtzLpsAutoTecnologia();
+                                a6.IdProceso = 1;
+                                a6.NombreTecno = data6.NombreTecno;
+                                a6.Prioridad = 0;
+                                _context.BtuMtzLpsAutoTecnologias.Add(a6);
+                                await _context.SaveChangesAsync();
+
+                                var asoc6 = (from s in _context.BtuMtzLpsAutoAsociados select s).ToList();
+                                foreach (var s in asoc6)
+                                {
+                                    BtuMtzLpsAutoAsocNivTec n = new BtuMtzLpsAutoAsocNivTec();
+                                    n.Asociado = s.Asociado;
+                                    n.IdTecno = a6.IdTecno;
+                                    n.IdNivel = 1;
+                                    _context.BtuMtzLpsAutoAsocNivTecs.Add(n);
+                                }
+                                await _context.SaveChangesAsync();
+                                return Ok(1);
+                            }
+                            else
+                            {
+                                return Ok(-1);
+                            }
+
+                        case 7:
+                            // Lógica para agregar tecnologías cuando this.url es 7
+                            var data7 = (from t in _context.BtuTecnologias where t.IdTecno == idint select t).FirstOrDefault();
+
+                            if (data7 != null)
+                            {
+                                // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                                BtuMtzWsaTecnologia a7 = new BtuMtzWsaTecnologia();
+                                a7.IdProceso = 1;
+                                a7.NombreTecno = data7.NombreTecno;
+                                a7.Prioridad = 0;
+                                _context.BtuMtzWsaTecnologias.Add(a7);
+                                await _context.SaveChangesAsync();
+
+                                var asoc7 = (from s in _context.BtuMtzWsaAsociados select s).ToList();
+                                foreach (var s in asoc7)
+                                {
+                                    BtuMtzWsaAsocNivTec n = new BtuMtzWsaAsocNivTec();
+                                    n.Asociado = s.Asociado;
+                                    n.IdTecno = a7.IdTecno;
+                                    n.IdNivel = 1;
+                                    _context.BtuMtzWsaAsocNivTecs.Add(n);
+                                }
+                                await _context.SaveChangesAsync();
+                                return Ok(1);
+                            }
+                            else
+                            {
+                                return Ok(-1);
+                            }
+
+                        // Agrega más casos según sea necesario
+
+                        default:
+                            return BadRequest("Índice no válido");
+                    }
+                }
+                else if (Request.Form.ContainsKey("name")) // Si se proporciona 'name', se ingresó manualmente
+                {
+                    string name = Request.Form["name"];
+                    string index = Request.Form["index"];
+                    int i = int.Parse(index);
+
+                    switch (i)
+                    {
+                        case 1:
+                            // Insertar el nuevo nombre de tecnología en la tabla BTU.Tecnologias
+                            var newTechnology = new BtuTecnologia { NombreTecno = name };
+                            _context.BtuTecnologias.Add(newTechnology);
+                            await _context.SaveChangesAsync();
+
+                            // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                            BtuMtzWsSTecnologia a1 = new BtuMtzWsSTecnologia();
+                            a1.IdProceso = 1;
+                            a1.NombreTecno = name; // Usar el nombre ingresado manualmente
+                            a1.Prioridad = 0;
+                            _context.BtuMtzWsSTecnologias.Add(a1);
+                            await _context.SaveChangesAsync();
+
+                            var asoc1 = (from s in _context.BtuMtzWsSAsociados select s).ToList();
+                            foreach (var s in asoc1)
+                            {
+                                BtuMtzWsSAsocNivTec n = new BtuMtzWsSAsocNivTec();
+                                n.Asociado = s.Asociado;
+                                n.IdTecno = a1.IdTecno;
+                                n.IdNivel = 1;
+                                _context.BtuMtzWsSAsocNivTecs.Add(n);
+                            }
+                            await _context.SaveChangesAsync();
+                            return Ok(1);
+
+                        case 2:
+                            // Insertar el nuevo nombre de tecnología en la tabla BTU.Tecnologias
+                            var newTechnology2 = new BtuTecnologia { NombreTecno = name };
+                            _context.BtuTecnologias.Add(newTechnology2);
+                            await _context.SaveChangesAsync();
+
+                            // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                            BtuMtzShTecnologia a2 = new BtuMtzShTecnologia();
+                            a2.IdProceso = 1;
+                            a2.NombreTecno = name; // Usar el nombre ingresado manualmente
+                            a2.Prioridad = 0;
+                            _context.BtuMtzShTecnologias.Add(a2);
+                            await _context.SaveChangesAsync();
+
+                            var asoc2 = (from s in _context.BtuMtzShAsociados select s).ToList();
+                            foreach (var s in asoc2)
+                            {
+                                BtuMtzShAsocNivTec n = new BtuMtzShAsocNivTec();
+                                n.Asociado = s.Asociado;
+                                n.IdTecno = a2.IdTecno;
+                                n.IdNivel = 1;
+                                _context.BtuMtzShAsocNivTecs.Add(n);
+                            }
+                            await _context.SaveChangesAsync();
+                            return Ok(1);
+
+                        case 3:
+                            // Insertar el nuevo nombre de tecnología en la tabla BTU.Tecnologias
+                            var newTechnology3 = new BtuTecnologia { NombreTecno = name };
+                            _context.BtuTecnologias.Add(newTechnology3);
+                            await _context.SaveChangesAsync();
+
+                            // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                            BtuMtzL751Tecnologia a3 = new BtuMtzL751Tecnologia();
+                            a3.IdProceso = 1;
+                            a3.NombreTecno = name; // Usar el nombre ingresado manualmente
+                            a3.Prioridad = 0;
+                            _context.BtuMtzL751Tecnologias.Add(a3);
+                            await _context.SaveChangesAsync();
+
+                            var asoc3 = (from s in _context.BtuMtzL751Asociados select s).ToList();
+                            foreach (var s in asoc3)
+                            {
+                                BtuMtzL751AsocNivTec n = new BtuMtzL751AsocNivTec();
+                                n.Asociado = s.Asociado;
+                                n.IdTecno = a3.IdTecno;
+                                n.IdNivel = 1;
+                                _context.BtuMtzL751AsocNivTecs.Add(n);
+                            }
+                            await _context.SaveChangesAsync();
+                            return Ok(1);
+
+                        case 4:
+                            // Insertar el nuevo nombre de tecnología en la tabla BTU.Tecnologias
+                            var newTechnology4 = new BtuTecnologia { NombreTecno = name };
+                            _context.BtuTecnologias.Add(newTechnology4);
+                            await _context.SaveChangesAsync();
+
+                            // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                            BtuMtzCaFpgTecnologia a4 = new BtuMtzCaFpgTecnologia();
+                            a4.IdProceso = 1;
+                            a4.NombreTecno = name; // Usar el nombre ingresado manualmente
+                            a4.Prioridad = 0;
+                            _context.BtuMtzCaFpgTecnologias.Add(a4);
+                            await _context.SaveChangesAsync();
+
+                            var asoc4 = (from s in _context.BtuMtzCaFpgAsociados select s).ToList();
+                            foreach (var s in asoc4)
+                            {
+                                BtuMtzCaFpgAsocNivTec n = new BtuMtzCaFpgAsocNivTec();
+                                n.Asociado = s.Asociado;
+                                n.IdTecno = a4.IdTecno;
+                                n.IdNivel = 1;
+                                _context.BtuMtzCaFpgAsocNivTecs.Add(n);
+                            }
+                            await _context.SaveChangesAsync();
+                            return Ok(1);
+
+                        case 5:
+                            // Insertar el nuevo nombre de tecnología en la tabla BTU.Tecnologias
+                            var newTechnology5 = new BtuTecnologia { NombreTecno = name };
+                            _context.BtuTecnologias.Add(newTechnology5);
+                            await _context.SaveChangesAsync();
+
+                            // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                            BtuMtzLpsSemiautoTecnologia a5 = new BtuMtzLpsSemiautoTecnologia();
+                            a5.IdProceso = 1;
+                            a5.NombreTecno = name; // Usar el nombre ingresado manualmente
+                            a5.Prioridad = 0;
+                            _context.BtuMtzLpsSemiautoTecnologias.Add(a5);
+                            await _context.SaveChangesAsync();
+
+                            var asoc5 = (from s in _context.BtuMtzLpsSemiautoAsociados select s).ToList();
+                            foreach (var s in asoc5)
+                            {
+                                BtuMtzLpsSemiautoAsocNivTec n = new BtuMtzLpsSemiautoAsocNivTec();
+                                n.Asociado = s.Asociado;
+                                n.IdTecno = a5.IdTecno;
+                                n.IdNivel = 1;
+                                _context.BtuMtzLpsSemiautoAsocNivTecs.Add(n);
+                            }
+                            await _context.SaveChangesAsync();
+                            return Ok(1);
+
+                        case 6:
+                            // Insertar el nuevo nombre de tecnología en la tabla BTU.Tecnologias
+                            var newTechnology6 = new BtuTecnologia { NombreTecno = name };
+                            _context.BtuTecnologias.Add(newTechnology6);
+                            await _context.SaveChangesAsync();
+
+                            // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                            BtuMtzLpsAutoTecnologia a6 = new BtuMtzLpsAutoTecnologia();
+                            a6.IdProceso = 1;
+                            a6.NombreTecno = name; // Usar el nombre ingresado manualmente
+                            a6.Prioridad = 0;
+                            _context.BtuMtzLpsAutoTecnologias.Add(a6);
+                            await _context.SaveChangesAsync();
+
+                            var asoc6 = (from s in _context.BtuMtzLpsAutoAsociados select s).ToList();
+                            foreach (var s in asoc6)
+                            {
+                                BtuMtzLpsAutoAsocNivTec n = new BtuMtzLpsAutoAsocNivTec();
+                                n.Asociado = s.Asociado;
+                                n.IdTecno = a6.IdTecno;
+                                n.IdNivel = 1;
+                                _context.BtuMtzLpsAutoAsocNivTecs.Add(n);
+                            }
+                            await _context.SaveChangesAsync();
+                            return Ok(1);
+
+                        case 7:
+                            // Insertar el nuevo nombre de tecnología en la tabla BTU.Tecnologias
+                            var newTechnology7 = new BtuTecnologia { NombreTecno = name };
+                            _context.BtuTecnologias.Add(newTechnology7);
+                            await _context.SaveChangesAsync();
+
+                            // Lógica para agregar la nueva tecnología a la tabla correspondiente
+                            BtuMtzWsaTecnologia a7 = new BtuMtzWsaTecnologia();
+                            a7.IdProceso = 1;
+                            a7.NombreTecno = name; // Usar el nombre ingresado manualmente
+                            a7.Prioridad = 0;
+                            _context.BtuMtzWsaTecnologias.Add(a7);
+                            await _context.SaveChangesAsync();
+
+                            var asoc7 = (from s in _context.BtuMtzWsaAsociados select s).ToList();
+                            foreach (var s in asoc7)
+                            {
+                                BtuMtzWsaAsocNivTec n = new BtuMtzWsaAsocNivTec();
+                                n.Asociado = s.Asociado;
+                                n.IdTecno = a7.IdTecno;
+                                n.IdNivel = 1;
+                                _context.BtuMtzWsaAsocNivTecs.Add(n);
+                            }
+                            await _context.SaveChangesAsync();
+                            return Ok(1);
+
+                            // Agrega más casos según sea necesario
+
+
+                            break;
+
+                        // Agrega más casos según sea necesario
+
+                        default:
+                            return BadRequest("Índice no válido");
+                    }
+                }
+                else
+                {
+                    return BadRequest("Parámetro 'id' o 'name' no proporcionado.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+            return BadRequest("No se encontró un caso válido para el índice proporcionado");
+        }
+
+
+        private bool BtuTecnologiaExists(int id)
+        {
+            return _context.BtuTecnologias.Any(e => e.IdTecno == id);
+        }
+    }
+}
