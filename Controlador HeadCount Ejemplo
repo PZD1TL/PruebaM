@@ -1,0 +1,362 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using BTU_Matrices.Models;
+using System.Drawing.Drawing2D;
+
+namespace BTU_Matrices.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class Hrl2ListaDigitalHeadCountController : ControllerBase
+    {
+        private readonly DbWebttcSqlContext _context;
+
+        public Hrl2ListaDigitalHeadCountController(DbWebttcSqlContext context)
+        {
+            _context = context;
+        }
+
+        // GET: api/Hrl2ListaDigitalHeadCount/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Hrl2ListaDigitalHeadCount>> GetHrl2ListaDigitalHeadCount(int id)
+        {
+            var hrl2ListaDigitalHeadCount = await _context.Hrl2ListaDigitalHeadCounts.FindAsync(id);
+
+            if (hrl2ListaDigitalHeadCount == null)
+            {
+                return NotFound();
+            }
+
+            return hrl2ListaDigitalHeadCount;
+        }
+
+        // Metodo para enviar todos los nombres del Head Count
+        [HttpGet("NombresAsociados")]
+        public async Task<ActionResult> GetNombresAsociados()
+        {
+            var nombresAsociados = await _context.Hrl2ListaDigitalHeadCounts
+                .OrderBy(h => h.NombreAsociado) // Ordenar por nombre directamente en la base de datos
+                .Select(h => new
+                {
+                    nombre = h.NombreAsociado,
+                    id = h.IdAsociado
+                })
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(nombresAsociados);
+        }
+
+       
+
+        // Metodo para insertar nuevos asociados del Head Count en la tabla de asociados y crear filas en AsocNivTec por cada tecnologia existente
+        // Agregar asociados a la Matriz MAQS. EN WS-S
+        [HttpPost]
+        public async Task<ActionResult> PostHrl2ListaDigitalHeadCount(int id)
+        {
+            try
+            {
+                string idA = Request.Form["id"];
+                int idint = int.Parse(idA);
+                var data = (from h in _context.Hrl2ListaDigitalHeadCounts where h.IdAsociado == idint select h).FirstOrDefault();
+
+                if (data != null)
+                {
+                    BtuMtzWsSAsociado a = new BtuMtzWsSAsociado();
+                    a.IdAsociado = idint;
+                    a.NoAsociado = data.NoAsociado;
+                    a.NombreAsociado = data.NombreAsociado;
+                    _context.BtuMtzWsSAsociados.Add(a);
+                    await _context.SaveChangesAsync();
+
+                    var tecno = (from t in _context.BtuMtzWsSTecnologias select t).ToList();
+                    foreach (var t in tecno)
+                    {
+                        BtuMtzWsSAsocNivTec n = new BtuMtzWsSAsocNivTec();
+                        n.Asociado = a.Asociado;
+                        n.IdTecno = t.IdTecno;
+                        n.IdNivel = 1;
+                        _context.BtuMtzWsSAsocNivTecs.Add(n);
+                    }
+                    await _context.SaveChangesAsync();
+                        return Ok(1);
+                    
+                }
+                else
+                {
+                    return Ok(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        // Agregar asociados a la Matriz SH
+        [HttpPost("agregarAsociadosSH")]
+        public async Task<ActionResult> PostHrl2ListaDigitalHeadCountSH(int id)
+        {
+            try
+            {
+                string idA = Request.Form["id"];
+                int idint = int.Parse(idA);
+                var data = (from h in _context.Hrl2ListaDigitalHeadCounts where h.IdAsociado == idint select h).FirstOrDefault();
+
+                if (data != null)
+                {
+                    BtuMtzShAsociado a = new BtuMtzShAsociado();
+                    a.IdAsociado = idint;
+                    a.NoAsociado = data.NoAsociado;
+                    a.NombreAsociado = data.NombreAsociado;
+                    _context.BtuMtzShAsociados.Add(a);
+                    await _context.SaveChangesAsync();
+
+                    var tecno = (from t in _context.BtuMtzShTecnologias select t).ToList();
+                    foreach (var t in tecno)
+                    {
+                        BtuMtzShAsocNivTec n = new BtuMtzShAsocNivTec();
+                        n.Asociado = a.Asociado;
+                        n.IdTecno = t.IdTecno;
+                        n.IdNivel = 1;
+                        _context.BtuMtzShAsocNivTecs.Add(n);
+                    }
+                    await _context.SaveChangesAsync();
+                    return Ok(1);
+
+                }
+                else
+                {
+                    return Ok(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Agregar asociados a la Matriz L751
+        [HttpPost("agregarAsociadosL751")]
+        public async Task<ActionResult> PostHrl2ListaDigitalHeadCountL751(int id)
+        {
+            try
+            {
+                string idA = Request.Form["id"];
+                int idint = int.Parse(idA);
+                var data = (from h in _context.Hrl2ListaDigitalHeadCounts where h.IdAsociado == idint select h).FirstOrDefault();
+
+                if (data != null)
+                {
+                    BtuMtzL751Asociado a = new BtuMtzL751Asociado();
+                    a.IdAsociado = idint;
+                    a.NoAsociado = data.NoAsociado;
+                    a.NombreAsociado = data.NombreAsociado;
+                    _context.BtuMtzL751Asociados.Add(a);
+                    await _context.SaveChangesAsync();
+
+                    var tecno = (from t in _context.BtuMtzL751Tecnologias select t).ToList();
+                    foreach (var t in tecno)
+                    {
+                        BtuMtzL751AsocNivTec n = new BtuMtzL751AsocNivTec();
+                        n.Asociado = a.Asociado;
+                        n.IdTecno = t.IdTecno;
+                        n.IdNivel = 1;
+                        _context.BtuMtzL751AsocNivTecs.Add(n);
+                    }
+                    await _context.SaveChangesAsync();
+                    return Ok(1);
+
+                }
+                else
+                {
+                    return Ok(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Agregar asociados a la Matriz CaFpg
+        [HttpPost("agregarAsociadosCaFpg")]
+        public async Task<ActionResult> PostHrl2ListaDigitalHeadCountCaFpg(int id)
+        {
+            try
+            {
+                string idA = Request.Form["id"];
+                int idint = int.Parse(idA);
+                var data = (from h in _context.Hrl2ListaDigitalHeadCounts where h.IdAsociado == idint select h).FirstOrDefault();
+
+                if (data != null)
+                {
+                    BtuMtzCaFpgAsociado a = new BtuMtzCaFpgAsociado();
+                    a.IdAsociado = idint;
+                    a.NoAsociado = data.NoAsociado;
+                    a.NombreAsociado = data.NombreAsociado;
+                    _context.BtuMtzCaFpgAsociados.Add(a);
+                    await _context.SaveChangesAsync();
+
+                    var tecno = (from t in _context.BtuMtzCaFpgTecnologias select t).ToList();
+                    foreach (var t in tecno)
+                    {
+                        BtuMtzCaFpgAsocNivTec n = new BtuMtzCaFpgAsocNivTec();
+                        n.Asociado = a.Asociado;
+                        n.IdTecno = t.IdTecno;
+                        n.IdNivel = 1;
+                        _context.BtuMtzCaFpgAsocNivTecs.Add(n);
+                    }
+                    await _context.SaveChangesAsync();
+                    return Ok(1);
+
+                }
+                else
+                {
+                    return Ok(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Agregar asociados a la Matriz LPS-SEMIAUTO
+        [HttpPost("agregarAsociadosLPSSEMIAUTO")]
+        public async Task<ActionResult> PostHrl2ListaDigitalHeadCountLPSSEMIAUTO(int id)
+        {
+            try
+            {
+                string idA = Request.Form["id"];
+                int idint = int.Parse(idA);
+                var data = (from h in _context.Hrl2ListaDigitalHeadCounts where h.IdAsociado == idint select h).FirstOrDefault();
+
+                if (data != null)
+                {
+                    BtuMtzLpsSemiautoAsociado a = new BtuMtzLpsSemiautoAsociado();
+                    a.IdAsociado = idint;
+                    a.NoAsociado = data.NoAsociado;
+                    a.NombreAsociado = data.NombreAsociado;
+                    _context.BtuMtzLpsSemiautoAsociados.Add(a);
+                    await _context.SaveChangesAsync();
+
+                    var tecno = (from t in _context.BtuMtzLpsSemiautoTecnologias select t).ToList();
+                    foreach (var t in tecno)
+                    {
+                        BtuMtzLpsSemiautoAsocNivTec n = new BtuMtzLpsSemiautoAsocNivTec();
+                        n.Asociado = a.Asociado;
+                        n.IdTecno = t.IdTecno;
+                        n.IdNivel = 1;
+                        _context.BtuMtzLpsSemiautoAsocNivTecs.Add(n);
+                    }
+                    await _context.SaveChangesAsync();
+                    return Ok(1);
+
+                }
+                else
+                {
+                    return Ok(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Agregar asociados a la Matriz LPS-AUTO
+        [HttpPost("agregarAsociadosLPSAUTO")]
+        public async Task<ActionResult> PostHrl2ListaDigitalHeadCountLPSAUTO(int id)
+        {
+            try
+            {
+                string idA = Request.Form["id"];
+                int idint = int.Parse(idA);
+                var data = (from h in _context.Hrl2ListaDigitalHeadCounts where h.IdAsociado == idint select h).FirstOrDefault();
+
+                if (data != null)
+                {
+                    BtuMtzLpsAutoAsociado a = new BtuMtzLpsAutoAsociado();
+                    a.IdAsociado = idint;
+                    a.NoAsociado = data.NoAsociado;
+                    a.NombreAsociado = data.NombreAsociado;
+                    _context.BtuMtzLpsAutoAsociados.Add(a);
+                    await _context.SaveChangesAsync();
+
+                    var tecno = (from t in _context.BtuMtzLpsAutoTecnologias select t).ToList();
+                    foreach (var t in tecno)
+                    {
+                        BtuMtzLpsAutoAsocNivTec n = new BtuMtzLpsAutoAsocNivTec();
+                        n.Asociado = a.Asociado;
+                        n.IdTecno = t.IdTecno;
+                        n.IdNivel = 1;
+                        _context.BtuMtzLpsAutoAsocNivTecs.Add(n);
+                    }
+                    await _context.SaveChangesAsync();
+                    return Ok(1);
+
+                }
+                else
+                {
+                    return Ok(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Agregar asociados a la Matriz WSA
+        [HttpPost("agregarAsociadosWSA")]
+        public async Task<ActionResult> PostHrl2ListaDigitalHeadCountWSA(int id)
+        {
+            try
+            {
+                string idA = Request.Form["id"];
+                int idint = int.Parse(idA);
+                var data = (from h in _context.Hrl2ListaDigitalHeadCounts where h.IdAsociado == idint select h).FirstOrDefault();
+
+                if (data != null)
+                {
+                    BtuMtzWsaAsociado a = new BtuMtzWsaAsociado();
+                    a.IdAsociado = idint;
+                    a.NoAsociado = data.NoAsociado;
+                    a.NombreAsociado = data.NombreAsociado;
+                    _context.BtuMtzWsaAsociados.Add(a);
+                    await _context.SaveChangesAsync();
+
+                    var tecno = (from t in _context.BtuMtzWsaTecnologias select t).ToList();
+                    foreach (var t in tecno)
+                    {
+                        BtuMtzWsaAsocNivTec n = new BtuMtzWsaAsocNivTec();
+                        n.Asociado = a.Asociado;
+                        n.IdTecno = t.IdTecno;
+                        n.IdNivel = 1;
+                        _context.BtuMtzWsaAsocNivTecs.Add(n);
+                    }
+                    await _context.SaveChangesAsync();
+                    return Ok(1);
+
+                }
+                else
+                {
+                    return Ok(-1);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+    }
+}
