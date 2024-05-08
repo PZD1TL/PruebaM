@@ -1,0 +1,88 @@
+#red{
+    color: red;
+}
+
+.menu-desplegable{
+    background-color: #dbd8d8;
+    width: 22.1px;
+    justify-content: center;
+    align-items: center;
+}
+.menu-desplegable:hover {
+    background-color: #c0bdbd; 
+}
+
+.Font{
+    font-family: 'Bosch Office Sans', sans-serif;
+}
+
+.texto-l2 {
+    margin-right: 6px; 
+}
+
+th:nth-child(even),td:nth-child(even) {
+    background-color: #eeeeee;
+}
+
+.TEF1 {
+    background-color: #97b3ef;
+}
+.TEF3 {
+    background-color: #f6ab86;
+}
+.TEF4 {
+    background-color: #c1c0c0;
+}
+.TEF7 {
+    background-color: #81cb97;
+}
+  
+.procesoNormal {
+    background-color: #dedbdb;
+}
+  
+#BotonP{
+    position: relative;
+}
+
+#BotonT{
+    position: relative;
+}
+
+#BotonN{
+    position: relative;
+}
+
+.modal-vertical-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.button-hover:hover {
+    background-color: #16ad67; 
+}
+  
+#searchInput {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    width: 200px;
+    box-sizing: border-box; 
+}
+  
+#searchInput:focus {
+    outline: none; 
+    border-color: #007bff; 
+}
+
+
+
+  
+  
+
+  
+
+  
