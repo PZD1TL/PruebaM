@@ -1,0 +1,225 @@
+import { Component, OnInit, ElementRef, ViewChild, Input } from '@angular/core';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { ServiceBackService } from '../service-back.service';
+import { DomSanitizer } from '@angular/platform-browser';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-add-techno-modal',
+  template: `
+    <div
+      style="font-family: 'Bosch Office Sans', sans-serif; text-align: center;"
+    >
+      <div
+        class="modal-header"
+        style="display: flex; flex-direction: column; align-items: center;"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="80"
+          height="80"
+          fill="currentColor"
+          class="bi bi-wrench-adjustable-circle"
+          viewBox="0 0 16 16"
+        >
+          <path
+            d="M12.496 8a4.5 4.5 0 0 1-1.703 3.526L9.497 8.5l2.959-1.11q.04.3.04.61"
+          />
+          <path
+            d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-1 0a7 7 0 1 0-13.202 3.249l1.988-1.657a4.5 4.5 0 0 1 7.537-4.623L7.497 6.5l1 2.5 1.333 3.11c-.56.251-1.18.39-1.833.39a4.5 4.5 0 0 1-1.592-.29L4.747 14.2A7 7 0 0 0 15 8m-8.295.139a.25.25 0 0 0-.288-.376l-1.5.5.159.474.808-.27-.595.894a.25.25 0 0 0 .287.376l.808-.27-.595.894a.25.25 0 0 0 .287.376l1.5-.5-.159-.474-.808.27.596-.894a.25.25 0 0 0-.288-.376l-.808.27z"
+          />
+        </svg>
+        <h1 class="modal-title">Agregar nueva tecnologia</h1>
+      </div>
+
+      <div class="modal-body">
+        <h4 style="text-align: center;">{{ message }}</h4>
+        <br />
+
+        <input
+          type="text"
+          id="searchInput"
+          [(ngModel)]="searchText"
+          (input)="filtrarNombres()"
+          placeholder="Buscar Tecnologia"
+        /><br /><br />
+
+        <select [(ngModel)]="nuevaTecnologia" id="NuevaTec" name="TecOpcion">
+          <ng-container *ngFor="let nombre of nombresTecnologias">
+            <option
+              [value]="nombre.id"
+              *ngIf="nombresFiltrados.includes(nombre)"
+            >
+              {{ nombre.nombre }}
+            </option>
+          </ng-container>
+        </select>
+        <br /><br />
+
+        <h4>o Ingrese una Nueva Tecnologia</h4>
+        <br />
+
+        <input [(ngModel)]="nuevaTecnologiaInput"
+          type="text"
+          id="searchInput"
+          placeholder="Ingrese el nombre de la nueva tecnologia"
+          style="width: 350px;"
+        />
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary btn-lg"
+          (click)="activeModal.dismiss('cancel')"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="AddTechno()"
+          type="button"
+          class="btn btn-success btn-lg"
+          (click)="activeModal.close('confirm')"
+        >
+          Agregar Tecnologia
+        </button>
+      </div>
+    </div>
+  `,
+  styles: [
+    `
+      .modal-dialog {
+        max-width: 2000px;
+      }
+      .modal-extra-large {
+        max-width: 800px;
+        top: 30%;
+      }
+      .modal-header,
+      .modal-footer {
+        border: none;
+      }
+      .icon {
+        fill: red;
+      }
+      #searchInput {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        width: 200px;
+        box-sizing: border-box;
+      }
+      #searchInput:focus {
+        outline: none;
+        border-color: #198754;
+      }
+    `,
+  ],
+})
+export class AddTechnoModalComponent implements OnInit {
+  @Input() message: string = '';
+
+  searchText: string = '';
+
+  nombresFiltrados: any[] = [];
+  nombresAsociados: any[] = [];
+  nuevoAsociado: any;
+  nombresTecnologias: any[] = [];
+  nuevaTecnologia: any;
+  nuevaTecnologiaInput: any;
+
+  url: any;
+
+  constructor(
+    public activeModal: NgbActiveModal,
+    private serviceBack: ServiceBackService,
+    private _activeRoute: DomSanitizer,
+    private _url: ActivatedRoute
+  ) {}
+
+  ngOnInit(): void {
+    this.serviceBack.obtenerTodasLasTecnologias().subscribe(
+      (nombresT) => {
+        this.nombresTecnologias = nombresT;
+        this.filtrarNombres();
+
+        console.log(nombresT);
+      },
+      (error) => {
+        console.error('Error al obtener nombres de asociados:', error);
+      }
+    );
+
+    this.url = window.location.href;
+    console.log(this.url);
+  }
+
+  filtrarNombres(): void {
+    if (!this.searchText.trim()) {
+      this.nombresFiltrados = this.nombresTecnologias; // Si el campo de búsqueda está vacío, muestra todos los nombres
+    } else {
+      this.nombresFiltrados = this.nombresTecnologias.filter((nombre) =>
+        nombre.nombre
+          .toLowerCase()
+          .includes(this.searchText.toLowerCase().trim())
+      );
+    }
+    console.log('Nombres filtrados:', this.nombresFiltrados); // Verifica los nombres filtrados
+  }
+
+  AddTechno() {
+    let url: number | undefined;
+  
+    // Determinar la URL basada en la vista actual
+    if (window.location.href.includes('matriz-MAQS-WS-S')) {
+      url = 1;
+    } else if (window.location.href.includes('matriz-MSE-SH')) {
+      url = 2;
+    } else if (window.location.href.includes('matriz-L751')) {
+      url = 3;
+    } else if (window.location.href.includes('matriz-CA-FPG')) {
+      url = 4;
+    } else if (window.location.href.includes('matriz-LPS-SEMIAUTOMATICA')) {
+      url = 5;
+    } else if (window.location.href.includes('matriz-LPS-AUTOMATICAS')) {
+      url = 6;
+    } else if (window.location.href.includes('matriz-WSA')) {
+      url = 7;
+    }
+    
+  
+    // Si se ha seleccionado una tecnología desde el menú desplegable
+    if (this.nuevaTecnologia) {
+      var values = new FormData();
+      values.append('id', this.nuevaTecnologia);
+      if (url !== undefined) {
+        values.append('index', url.toString());
+      }
+      this.serviceBack.AddTechno(values).then((resolve: any) => {
+        console.log(resolve);
+        if (resolve === 1) {
+          location.reload(); // Recargar la página si la operación se realizó correctamente
+        }
+      });
+    } else if (this.nuevaTecnologiaInput && url !== undefined) { // Si se ha ingresado una nueva tecnología manualmente
+      var values = new FormData();
+      values.append('name', this.nuevaTecnologiaInput);
+      if (url !== undefined) {
+        values.append('index', url.toString());
+      }
+      this.serviceBack.AddTechno(values).then((resolve: any) => {
+        console.log(resolve);
+        if (resolve === 1) {
+          location.reload(); // Recargar la página si la operación se realizó correctamente
+        }
+      });
+    }
+  }
+  
+  
+  
+
+
+}
+
