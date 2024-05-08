@@ -1,0 +1,55 @@
+import { Directive, HostListener, ElementRef, Renderer2 } from "@angular/core";
+
+@Directive({
+    selector: "[wheel]"
+})
+export class WheelDirective {
+  private i: number = 1; // Factor de escala inicial
+  private range: number = 0.01; // Rango de cambio de zoom
+
+  constructor(private el: ElementRef, private renderer: Renderer2) {}
+
+  // Aplica el zoom a los elementos internos
+  private applyZoom() {
+    const targetElement = this.el.nativeElement;
+    const innerElements = targetElement.querySelectorAll('.containerT');
+
+    innerElements.forEach((innerElement: HTMLElement) => {
+      this.renderer.setStyle(innerElement, "transform-origin", "top left");
+      this.renderer.setStyle(innerElement, "transition", "transform 200ms ease-in-out");
+      this.renderer.setStyle(innerElement, "transform", `scale(${this.i})`);
+    });
+  }
+
+  // Ajusta el zoom según el delta
+  private adjustZoom(delta: number) {
+    const minScale = 0.1;  // Escala mínima permitida
+    this.i = Math.max(minScale, this.i + delta);  // Ajusta el factor de escala
+    this.applyZoom(); //Aplica el zoom
+
+    // // Hacer scroll hacia la derecha
+    if (delta < 0) {
+        const container = this.el.nativeElement.querySelector('.containerT');
+        container.scrollLeft += 10; 
+    }
+}
+
+  // Maneja el evento mousewheel
+  @HostListener("mousewheel", ["$event"])
+  onMousewheel(event: { ctrlKey: boolean; preventDefault: () => void; wheelDelta: number; }) {
+    if (event.ctrlKey) {
+      event.preventDefault();  // Previene el comportamiento predeterminado del evento
+      this.adjustZoom(event.wheelDelta > 0 ? this.range : -this.range);  // Ajusta el zoom según la dirección de la rueda del mouse
+    }
+  }
+
+  // Método para realizar el zoom in
+  zoomIn() {
+    this.adjustZoom(this.range);
+  }
+
+  // Método para realizar el zoom out
+  zoomOut() {
+    this.adjustZoom(-this.range);
+  }
+}
