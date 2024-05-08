@@ -1,0 +1,209 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using BTU_Matrices.Models;
+
+namespace BTU_Matrices.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AsocNivTecSHController : ControllerBase
+    {
+        private readonly DbWebttcSqlContext _context;
+
+        public AsocNivTecSHController(DbWebttcSqlContext context)
+        {
+            _context = context;
+        }
+
+        // Metodo para pasar la informacion de asociados con sus respectivas tecnologias, procesos, prioridades, niveles, etc. al Frontend
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<BtuMtzShAsocNivTec>>> GetBtuMtzSHAsocNivTecs()
+        {
+            try
+            {
+                var data = await (from a in _context.BtuMtzShAsocNivTecs
+                                  join t in _context.BtuMtzShTecnologias on a.IdTecno equals t.IdTecno
+                                  join p in _context.BtuMtzShProcesos on t.IdProceso equals p.IdProceso
+                                  join n in _context.BtuMtzNiveles on a.IdNivel equals n.IdNivel
+                                  join s in _context.BtuMtzShAsociados on a.Asociado equals s.Asociado
+                                  select new
+                                  {
+                                      idMain = a.MainId,
+                                      id = a.Asociado,
+                                      idTecno = t.IdTecno,
+                                      idProceso = t.IdProceso,
+                                      tecnologia = t.NombreTecno,
+                                      prioridad = t.Prioridad,
+                                      proceso = p.NombreProceso,
+                                      asociado = s.NombreAsociado,
+                                      nivel = n.NombreNivel,
+                                      noAsociado = s.NoAsociado,
+                                      IdAsociado = s.Asociado,
+
+                                      
+                                  })
+                        .ToListAsync();
+                var groupedData = data.GroupBy(a => a.id)
+                                      .Select(grouped => grouped.ToList()
+                                      )
+                                      .ToList();
+                return Ok(groupedData);
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
+            // return await _context.BtuMtzSHAsocNivTecs.ToListAsync();
+        }
+
+        // Metodo para agrupar los niveles correspondientes a su usuario en AsocNivTec y mandarlos al Frontend
+        [Route("GetLevels")]
+        [HttpGet]
+        public IActionResult getDataOfLevels()
+        {
+            try
+            {
+                var data = (from l in _context.BtuMtzShAsocNivTecs
+                            join n in _context.BtuMtzNiveles on l.IdNivel equals n.IdNivel
+                            select new
+                            {
+                                l.MainId,
+                                l.Asociado,
+                                n.NombreNivel
+                            }).ToList();
+                var grouped = data.GroupBy(a => a.Asociado)
+                    .Select(grouped => grouped.ToList()).ToList();
+                return Ok(grouped);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Metodo para actualizar los nuevos niveles seleccionados en AsocNivTec
+        [HttpPut("ActualizarNivel/{id}/{nuevoNivel}")]
+        public async Task<IActionResult> ActualizarNivel(int id, string nuevoNivel)
+        {
+            Console.WriteLine($"Actualizando nivel para ID {id} a {nuevoNivel}");
+
+            var btuMtzSHAsocNivTec = await _context.BtuMtzShAsocNivTecs.FindAsync(id);
+
+            if (btuMtzSHAsocNivTec == null)
+            {
+                return NotFound();
+            }
+
+            // Recupera el nivel correspondiente al nuevo nombre
+            var nuevoNivelEntity = _context.BtuMtzNiveles.SingleOrDefault(n => n.NombreNivel == Uri.UnescapeDataString(nuevoNivel));
+
+
+            if (nuevoNivelEntity == null)
+            {
+                // Maneja el caso en que el nuevo nombre de nivel no se encuentre en la base de datos
+                return BadRequest("El nuevo nivel no es válido.");
+            }
+
+            // Actualiza el IdNivel en la entidad AsocNivTec
+            btuMtzSHAsocNivTec.IdNivel = nuevoNivelEntity.IdNivel;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Cambios guardados exitosamente", data = btuMtzSHAsocNivTec });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BtuMtzShAsocNivTecExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        // Método para eliminar asociado y sus registros en AsocNivTec
+        [HttpDelete("EliminarAsociado/{id}")]
+        public async Task<IActionResult> EliminarAsociado(int id)
+        {
+            try
+            {
+                // Registro de depuración
+                Console.WriteLine($"Solicitud de eliminación recibida para el ID de asociado: {id}");
+
+                // Buscar el asociado en la base de datos
+                var asociado = await _context.BtuMtzShAsociados.FindAsync(id);
+                if (asociado == null)
+                {
+                    return NotFound();
+                }
+
+                // Registro de depuración
+                Console.WriteLine($"Asociado encontrado para el ID: {asociado.IdAsociado}");
+
+                // Eliminar el asociado de la tabla Asociados
+                _context.BtuMtzShAsociados.Remove(asociado);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al eliminar el asociado: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Método para eliminar tecnologias y sus registros en AsocNivTec
+        [HttpDelete("EliminarTecnologia/{id}")]
+        public async Task<IActionResult> EliminarTecnologia(int id)
+        {
+            try
+            {
+                // Buscar la tecnología en la base de datos
+                var tecnologia = await _context.BtuMtzShTecnologias.FindAsync(id);
+                if (tecnologia == null)
+                {
+                    return NotFound();
+                }
+
+                // Eliminar la tecnología de la tabla Tecnologias
+                _context.BtuMtzShTecnologias.Remove(tecnologia);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al eliminar la tecnología: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // DELETE: api/AsocNivTecSH/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBtuMtzShAsocNivTec(int id)
+        {
+            var btuMtzShAsocNivTec = await _context.BtuMtzShAsocNivTecs.FindAsync(id);
+            if (btuMtzShAsocNivTec == null)
+            {
+                return NotFound();
+            }
+
+            _context.BtuMtzShAsocNivTecs.Remove(btuMtzShAsocNivTec);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool BtuMtzShAsocNivTecExists(int id)
+        {
+            return _context.BtuMtzShAsocNivTecs.Any(e => e.MainId == id);
+        }
+    }
+}
