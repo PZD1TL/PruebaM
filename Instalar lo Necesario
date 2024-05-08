@@ -1,0 +1,21 @@
+-Visual Studio Code
+-Angular
+-Visual Studio 2022 (de preferencia el Community)
+-Microsoft SQL Server Management Studio 18
+-Tener instalado Node.js (Node Version Manager)
+
+-Instalar los siguientes workloads en Visual Studio Installer:  ASP.NET and web development, Azure development, Python development, Node.js development, .NET Multi-platform App UI development, .NET desktop development, Universal Windows Platform development
+
+-Instalar los componentes individuales: .NET 5.0 Runtime, 6.0 Runtime (Long Term Support), 7.0 Runtime, 8.0 Runtime (Long Term Support), .NET Framework 4.7.2 targeting pack, 4.8 SDK, 4.8 targeting pack, .NET MAUI SDK for Windows, .NET Native, 
+.NET SDK, SDK for Android, SDK for IOS, SDK for Mac Catalyst, ML.NET Model Builder, SELECCIONAR TODO EN "Cloud, database, and server" EXCEPTO: Data sources and service references
+
+-Instalar los paquetes en NuGet Package Manager:
+Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter
+Microsoft.AspNetCore.Mvc.NewtonsoftJson
+Microsoft.AspNetCore.OpenApi
+Microsoft.EntityFrameworkCore.Design
+Microsoft.EntityFrameworkCore.SqlServer
+Microsoft.EntityFrameworkCore.Tools
+System.Data.SqlClient
+Microsoft.VisualStudio.Web.CodeGeneration.Design
+Swashbuckle.AspNetCore
