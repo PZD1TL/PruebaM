@@ -1,0 +1,810 @@
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ServiceBackService {
+
+  readonly apiUrl = 'http://localhost:5277/api/'; // URL base del backend
+
+  constructor(private http: HttpClient) {}
+
+
+
+    // Método para obtener todos los nombres de asociados del Head Count desde el backend
+    obtenerNombresAsociados(): Observable<string[]> {
+      const url = `${this.apiUrl}Hrl2ListaDigitalHeadCount/NombresAsociados`;
+      return this.http.get<string[]>(url);
+      }
+
+    // Método para obtener todos los nombres de las tecnologias de todas las matrices
+    obtenerTodasLasTecnologias(): Observable<string[]> {
+      const url = `${this.apiUrl}TecnologiasMatrices/NombresTecnologias`;
+      return this.http.get<string[]>(url);
+    }
+
+
+  /*
+        METODOS DE LA MATRIZ MAQS. EN WS-S
+  */
+
+  //Metodo para obtener los datos importantes de distintas tablas desde el backend
+  public obtenerAsocNivTec(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecWsS`).subscribe(
+        data => {
+          console.log('Datos obtenidos del backend:', data);
+          resolve(data);
+        },
+        error => {
+          console.error('Error al obtener datos del backend:', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  // Método para obtener tecnologías desde el backend
+  obtenerTecnologias(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}TecnologiasWsS`);
+  }
+  
+  // Método para obtener los nombres de los procesos desde el backend
+  obtenerNombresProcesos(): Observable<string[]> {
+    const url = `${this.apiUrl}ProcesosWsS/GetNombresProcesos`; 
+    return this.http.get<string[]>(url);
+  }
+
+  // Método asíncrono para obtener niveles específicos desde el backend
+  public obtenerNiv(): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecWsS/GetLevels`).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+
+    })
+  }
+
+  // Método para enviar solicitud para agregar asociados del Head Count a la matriz
+  public AddUser(param: any ): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.post<any>(`${this.apiUrl}Hrl2ListaDigitalHeadCount`,param).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+    })
+  }
+
+  
+  // Método para enviar solicitud para agregar tecnologias a la matriz
+  public AddTechno(param: any ): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.post<any>(`${this.apiUrl}TecnologiasMatrices/agregarTecnologias`,param).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+    })
+  }
+
+  // Método para enviar solicitud para agregar nuevos procesos
+agregarProceso(nombreProceso: string): Observable<any> {
+  console.log('Enviando solicitud para agregar proceso:', nombreProceso);
+  const url = `${this.apiUrl}ProcesosWsS`;
+  const body = { nombreProceso: nombreProceso }; // Enviar el nombre de la función con el nombre esperado por el backend
+  return this.http.post(url, body);
+}
+
+  // Método para enviar solicitud para cambiar el proceso de una tecnologia por uno nuevo
+actualizarIdProceso(params: any): Observable<any> {
+  console.log('Enviando solicitud para cambiar el Id del Proceso:');
+  const url = `${this.apiUrl}TecnologiasWsS/actualizarIdProceso`;
+  return this.http.post(url, params);
+}
+
+ // Método para enviar solicitud para actualizar nombres de tecnologías y prioridades
+ updateTecnologia(id: number, cambios: any): Observable<any> {
+  const url = `${this.apiUrl}TecnologiasWsS/${id}`;
+  console.log(`Realizando solicitud HTTP PUT a ${url} con cambios:`, cambios);
+
+  return this.http.put(url, { ...cambios, Id: id }, this.getHeaders())
+    .pipe(
+      tap(response => console.log(`updateTecnologia response:`, response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud para actualizar niveles seleccionados
+actualizarNivelEnBackend(id: number, nuevoNivel: string): Observable<any> {
+  console.log(`Enviando solicitud para actualizar nivel. ID: ${id}, Nuevo Nivel: ${nuevoNivel}`);
+  const encodedNivel = encodeURIComponent(nuevoNivel.replace(/\//g, '%2F'));
+  return this.http.put<any>(`${this.apiUrl}AsocNivTecWsS/ActualizarNivel/${id}/${encodedNivel}`, null, this.getHeaders());
+}
+
+  // Método para enviar solicitud de eliminado de asociados
+  eliminarAsociado(id: number): Observable<any> {
+    const url = `${this.apiUrl}AsocNivTecWsS/EliminarAsociado/${id}`;
+    return this.http.delete(url, this.getHeaders())
+      .pipe(
+        tap(response => console.log('Eliminar asociado response:', response)),
+        catchError(this.handleError)
+      );
+  }
+  
+  // Método para enviar solicitud de eliminado de tecnologias
+  eliminarTecnologia(idTecnologia: number): Observable<any> {
+    const url = `${this.apiUrl}TecnologiasWsS/${idTecnologia}`;
+    return this.http.delete(url, this.getHeaders())
+      .pipe(
+        tap(response => console.log('Eliminar tecnología response:', response)),
+        catchError(this.handleError)
+      );
+  }
+
+  /*
+        METODOS DE LA MATRIZ SH
+  */
+
+  //Metodo para obtener los datos importantes de distintas tablas desde el backend
+  public obtenerAsocNivTecSH(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecSH`).subscribe(
+        data => {
+          console.log('Datos obtenidos del backend:', data);
+          resolve(data);
+        },
+        error => {
+          console.error('Error al obtener datos del backend:', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  
+  // Método para obtener tecnologías desde el backend
+  obtenerTecnologiasSH(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}TecnologiasSH`);
+  }
+  
+  // Método para obtener los nombres de los procesos desde el backend
+  obtenerNombresProcesosSH(): Observable<string[]> {
+    const url = `${this.apiUrl}ProcesosSH/GetNombresProcesos`; 
+    return this.http.get<string[]>(url);
+  }
+
+  // Método asíncrono para obtener niveles específicos desde el backend
+  public obtenerNivSH(): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecSH/GetLevels`).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+
+    })
+  }
+
+  // Método para enviar solicitud para agregar asociados del Head Count a la matriz
+  public AddUserSH(param: any ): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.post<any>(`${this.apiUrl}Hrl2ListaDigitalHeadCount/agregarAsociadosSH`,param).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+    })
+  }
+
+  // Método para enviar solicitud para agregar nuevos procesos
+agregarProcesoSH(nombreProceso: string): Observable<any> {
+  console.log('Enviando solicitud para agregar proceso:', nombreProceso);
+  const url = `${this.apiUrl}ProcesosSH`;
+  const body = { nombreProceso: nombreProceso }; // Enviar el nombre de la función con el nombre esperado por el backend
+  return this.http.post(url, body);
+}
+
+  // Método para enviar solicitud para cambiar el proceso de una tecnologia por uno nuevo
+actualizarIdProcesoSH(params: any): Observable<any> {
+  console.log('Enviando solicitud para cambiar el Id del Proceso:');
+  const url = `${this.apiUrl}TecnologiasSH/actualizarIdProceso`;
+  return this.http.post(url, params);
+}
+
+// Método para enviar solicitud para actualizar nombres de tecnologías y prioridades
+updateTecnologiaSH(id: number, cambios: any): Observable<any> {
+  const url = `${this.apiUrl}TecnologiasSH/${id}`;
+  console.log(`Realizando solicitud HTTP PUT a ${url} con cambios:`, cambios);
+
+  return this.http.put(url, { ...cambios, Id: id }, this.getHeaders())
+    .pipe(
+      tap(response => console.log(`updateTecnologia response:`, response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud para actualizar niveles seleccionados
+actualizarNivelEnBackendSH(id: number, nuevoNivel: string): Observable<any> {
+  console.log(`Enviando solicitud para actualizar nivel. ID: ${id}, Nuevo Nivel: ${nuevoNivel}`);
+  const encodedNivel = encodeURIComponent(nuevoNivel.replace(/\//g, '%2F'));
+  return this.http.put<any>(`${this.apiUrl}AsocNivTecSH/ActualizarNivel/${id}/${encodedNivel}`, null, this.getHeaders());
+}
+
+// Método para enviar solicitud de eliminado de asociados
+eliminarAsociadoSH(id: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecSH/EliminarAsociado/${id}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar asociado response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud de eliminado de tecnologias
+eliminarTecnologiaSH(idTecnologia: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecSH/EliminarTecnologia/${idTecnologia}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar tecnología response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+  /*
+        METODOS DE LA MATRIZ L-751
+  */
+
+        //Metodo para obtener los datos importantes de distintas tablas desde el backend
+  public obtenerAsocNivTecL751(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecL751`).subscribe(
+        data => {
+          console.log('Datos obtenidos del backend:', data);
+          resolve(data);
+        },
+        error => {
+          console.error('Error al obtener datos del backend:', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  
+  // Método para obtener tecnologías desde el backend
+  obtenerTecnologiasL751(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}TecnologiasL751`);
+  }
+  
+  // Método para obtener los nombres de los procesos desde el backend
+  obtenerNombresProcesosL751(): Observable<string[]> {
+    const url = `${this.apiUrl}ProcesosL751/GetNombresProcesos`; 
+    return this.http.get<string[]>(url);
+  }
+
+  // Método asíncrono para obtener niveles específicos desde el backend
+  public obtenerNivL751(): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecL751/GetLevels`).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+
+    })
+  }
+
+  // Método para enviar solicitud para agregar asociados del Head Count a la matriz
+  public AddUserL751(param: any ): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.post<any>(`${this.apiUrl}Hrl2ListaDigitalHeadCount/agregarAsociadosL751`,param).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+    })
+  }
+
+  // Método para enviar solicitud para agregar nuevos procesos
+agregarProcesoL751(nombreProceso: string): Observable<any> {
+  console.log('Enviando solicitud para agregar proceso:', nombreProceso);
+  const url = `${this.apiUrl}ProcesosL751`;
+  const body = { nombreProceso: nombreProceso }; // Enviar el nombre de la función con el nombre esperado por el backend
+  return this.http.post(url, body);
+}
+
+  // Método para enviar solicitud para cambiar el proceso de una tecnologia por uno nuevo
+actualizarIdProcesoL751(params: any): Observable<any> {
+  console.log('Enviando solicitud para cambiar el Id del Proceso:');
+  const url = `${this.apiUrl}TecnologiasL751/actualizarIdProceso`;
+  return this.http.post(url, params);
+}
+
+// Método para enviar solicitud para actualizar nombres de tecnologías y prioridades
+updateTecnologiaL751(id: number, cambios: any): Observable<any> {
+  const url = `${this.apiUrl}TecnologiasL751/${id}`;
+  console.log(`Realizando solicitud HTTP PUT a ${url} con cambios:`, cambios);
+
+  return this.http.put(url, { ...cambios, Id: id }, this.getHeaders())
+    .pipe(
+      tap(response => console.log(`updateTecnologia response:`, response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud para actualizar niveles seleccionados
+actualizarNivelEnBackendL751(id: number, nuevoNivel: string): Observable<any> {
+  console.log(`Enviando solicitud para actualizar nivel. ID: ${id}, Nuevo Nivel: ${nuevoNivel}`);
+  const encodedNivel = encodeURIComponent(nuevoNivel.replace(/\//g, '%2F'));
+  return this.http.put<any>(`${this.apiUrl}AsocNivTecL751/ActualizarNivel/${id}/${encodedNivel}`, null, this.getHeaders());
+}
+
+// Método para enviar solicitud de eliminado de asociados
+eliminarAsociadoL751(id: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecL751/EliminarAsociado/${id}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar asociado response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud de eliminado de tecnologias
+eliminarTecnologiaL751(idTecnologia: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecL751/EliminarTecnologia/${idTecnologia}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar tecnología response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+ /*
+        METODOS DE LA MATRIZ CA-FPG
+  */
+
+  //Metodo para obtener los datos importantes de distintas tablas desde el backend
+  public obtenerAsocNivTecCA_FPG(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecCaFpg`).subscribe(
+        data => {
+          console.log('Datos obtenidos del backend:', data);
+          resolve(data);
+        },
+        error => {
+          console.error('Error al obtener datos del backend:', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  
+  // Método para obtener tecnologías desde el backend
+  obtenerTecnologiasCA_FPG(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}TecnologiasCaFpg`);
+  }
+  
+  // Método para obtener los nombres de los procesos desde el backend
+  obtenerNombresProcesosCA_FPG(): Observable<string[]> {
+    const url = `${this.apiUrl}ProcesosCaFpg/GetNombresProcesos`; 
+    return this.http.get<string[]>(url);
+  }
+
+  // Método asíncrono para obtener niveles específicos desde el backend
+  public obtenerNivCA_FPG(): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecCaFpg/GetLevels`).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+
+    })
+  }
+
+  // Método para enviar solicitud para agregar asociados del Head Count a la matriz
+  public AddUserCA_FPG(param: any ): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.post<any>(`${this.apiUrl}Hrl2ListaDigitalHeadCount/agregarAsociadosCaFpg`,param).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+    })
+  }
+
+  // Método para enviar solicitud para agregar nuevos procesos
+agregarProcesoCA_FPG(nombreProceso: string): Observable<any> {
+  console.log('Enviando solicitud para agregar proceso:', nombreProceso);
+  const url = `${this.apiUrl}ProcesosCaFpg`;
+  const body = { nombreProceso: nombreProceso }; // Enviar el nombre de la función con el nombre esperado por el backend
+  return this.http.post(url, body);
+}
+
+  // Método para enviar solicitud para cambiar el proceso de una tecnologia por uno nuevo
+actualizarIdProcesoCA_FPG(params: any): Observable<any> {
+  console.log('Enviando solicitud para cambiar el Id del Proceso:');
+  const url = `${this.apiUrl}TecnologiasCaFpg/actualizarIdProceso`;
+  return this.http.post(url, params);
+}
+
+// Método para enviar solicitud para actualizar nombres de tecnologías y prioridades
+updateTecnologiaCA_FPG(id: number, cambios: any): Observable<any> {
+  const url = `${this.apiUrl}TecnologiasCaFpg/${id}`;
+  console.log(`Realizando solicitud HTTP PUT a ${url} con cambios:`, cambios);
+
+  return this.http.put(url, { ...cambios, Id: id }, this.getHeaders())
+    .pipe(
+      tap(response => console.log(`updateTecnologia response:`, response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud para actualizar niveles seleccionados
+actualizarNivelEnBackendCA_FPG(id: number, nuevoNivel: string): Observable<any> {
+  console.log(`Enviando solicitud para actualizar nivel. ID: ${id}, Nuevo Nivel: ${nuevoNivel}`);
+  const encodedNivel = encodeURIComponent(nuevoNivel.replace(/\//g, '%2F'));
+  return this.http.put<any>(`${this.apiUrl}AsocNivTecCaFpg/ActualizarNivel/${id}/${encodedNivel}`, null, this.getHeaders());
+}
+
+// Método para enviar solicitud de eliminado de asociados
+eliminarAsociadoCA_FPG(id: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecCaFpg/EliminarAsociado/${id}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar asociado response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud de eliminado de tecnologias
+eliminarTecnologiaCA_FPG(idTecnologia: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecCaFpg/EliminarTecnologia/${idTecnologia}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar tecnología response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+
+/*
+        METODOS DE LA MATRIZ LPS SEMIAUTOMATICA
+*/
+
+  //Metodo para obtener los datos importantes de distintas tablas desde el backend
+  public obtenerAsocNivTecLPS_SEMI(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecLpsSemiauto`).subscribe(
+        data => {
+          console.log('Datos obtenidos del backend:', data);
+          resolve(data);
+        },
+        error => {
+          console.error('Error al obtener datos del backend:', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  
+  // Método para obtener tecnologías desde el backend
+  obtenerTecnologiasLPS_SEMI(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}TecnologiasLpsSemiauto`);
+  }
+  
+  // Método para obtener los nombres de los procesos desde el backend
+  obtenerNombresProcesosLPS_SEMI(): Observable<string[]> {
+    const url = `${this.apiUrl}ProcesosLpsSemiauto/GetNombresProcesos`; 
+    return this.http.get<string[]>(url);
+  }
+
+  // Método asíncrono para obtener niveles específicos desde el backend
+  public obtenerNivLPS_SEMI(): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecLpsSemiauto/GetLevels`).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+
+    })
+  }
+
+  // Método para enviar solicitud para agregar asociados del Head Count a la matriz
+  public AddUserLPS_SEMI(param: any ): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.post<any>(`${this.apiUrl}Hrl2ListaDigitalHeadCount/agregarAsociadosLPSSEMIAUTO`,param).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+    })
+  }
+
+  // Método para enviar solicitud para agregar nuevos procesos
+agregarProcesoLPS_SEMI(nombreProceso: string): Observable<any> {
+  console.log('Enviando solicitud para agregar proceso:', nombreProceso);
+  const url = `${this.apiUrl}ProcesosLpsSemiauto`;
+  const body = { nombreProceso: nombreProceso }; // Enviar el nombre de la función con el nombre esperado por el backend
+  return this.http.post(url, body);
+}
+
+  // Método para enviar solicitud para cambiar el proceso de una tecnologia por uno nuevo
+actualizarIdProcesoLPS_SEMI(params: any): Observable<any> {
+  console.log('Enviando solicitud para cambiar el Id del Proceso:');
+  const url = `${this.apiUrl}TecnologiasLpsSemiauto/actualizarIdProceso`;
+  return this.http.post(url, params);
+}
+
+// Método para enviar solicitud para actualizar nombres de tecnologías y prioridades
+updateTecnologiaLPS_SEMI(id: number, cambios: any): Observable<any> {
+  const url = `${this.apiUrl}TecnologiasLpsSemiauto/${id}`;
+  console.log(`Realizando solicitud HTTP PUT a ${url} con cambios:`, cambios);
+
+  return this.http.put(url, { ...cambios, Id: id }, this.getHeaders())
+    .pipe(
+      tap(response => console.log(`updateTecnologia response:`, response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud para actualizar niveles seleccionados
+actualizarNivelEnBackendLPS_SEMI(id: number, nuevoNivel: string): Observable<any> {
+  console.log(`Enviando solicitud para actualizar nivel. ID: ${id}, Nuevo Nivel: ${nuevoNivel}`);
+  const encodedNivel = encodeURIComponent(nuevoNivel.replace(/\//g, '%2F'));
+  return this.http.put<any>(`${this.apiUrl}AsocNivTecLpsSemiauto/ActualizarNivel/${id}/${encodedNivel}`, null, this.getHeaders());
+}
+
+// Método para enviar solicitud de eliminado de asociados
+eliminarAsociadoLPS_SEMI(id: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecLpsSemiauto/EliminarAsociado/${id}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar asociado response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud de eliminado de tecnologias
+eliminarTecnologiaLPS_SEMI(idTecnologia: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecLpsSemiauto/EliminarTecnologia/${idTecnologia}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar tecnología response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+/*
+        METODOS DE LA MATRIZ LPS AUTOMATICAS
+*/
+
+  //Metodo para obtener los datos importantes de distintas tablas desde el backend
+  public obtenerAsocNivTecLPS_AUTO(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecLpsAuto`).subscribe(
+        data => {
+          console.log('Datos obtenidos del backend:', data);
+          resolve(data);
+        },
+        error => {
+          console.error('Error al obtener datos del backend:', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  
+  // Método para obtener tecnologías desde el backend
+  obtenerTecnologiasLPS_AUTO(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}TecnologiasLpsAuto`);
+  }
+  
+  // Método para obtener los nombres de los procesos desde el backend
+  obtenerNombresProcesosLPS_AUTO(): Observable<string[]> {
+    const url = `${this.apiUrl}ProcesosLpsAuto/GetNombresProcesos`; 
+    return this.http.get<string[]>(url);
+  }
+
+  // Método asíncrono para obtener niveles específicos desde el backend
+  public obtenerNivLPS_AUTO(): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecLpsAuto/GetLevels`).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+
+    })
+  }
+
+  // Método para enviar solicitud para agregar asociados del Head Count a la matriz
+  public AddUserLPS_AUTO(param: any ): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.post<any>(`${this.apiUrl}Hrl2ListaDigitalHeadCount/agregarAsociadosLPSAUTO`,param).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+    })
+  }
+
+  // Método para enviar solicitud para agregar nuevos procesos
+agregarProcesoLPS_AUTO(nombreProceso: string): Observable<any> {
+  console.log('Enviando solicitud para agregar proceso:', nombreProceso);
+  const url = `${this.apiUrl}ProcesosLpsAuto`;
+  const body = { nombreProceso: nombreProceso }; // Enviar el nombre de la función con el nombre esperado por el backend
+  return this.http.post(url, body);
+}
+
+  // Método para enviar solicitud para cambiar el proceso de una tecnologia por uno nuevo
+actualizarIdProcesoLPS_AUTO(params: any): Observable<any> {
+  console.log('Enviando solicitud para cambiar el Id del Proceso:');
+  const url = `${this.apiUrl}TecnologiasLpsAuto/actualizarIdProceso`;
+  return this.http.post(url, params);
+}
+
+// Método para enviar solicitud para actualizar nombres de tecnologías y prioridades
+updateTecnologiaLPS_AUTO(id: number, cambios: any): Observable<any> {
+  const url = `${this.apiUrl}TecnologiasLpsAuto/${id}`;
+  console.log(`Realizando solicitud HTTP PUT a ${url} con cambios:`, cambios);
+
+  return this.http.put(url, { ...cambios, Id: id }, this.getHeaders())
+    .pipe(
+      tap(response => console.log(`updateTecnologia response:`, response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud para actualizar niveles seleccionados
+actualizarNivelEnBackendLPS_AUTO(id: number, nuevoNivel: string): Observable<any> {
+  console.log(`Enviando solicitud para actualizar nivel. ID: ${id}, Nuevo Nivel: ${nuevoNivel}`);
+  const encodedNivel = encodeURIComponent(nuevoNivel.replace(/\//g, '%2F'));
+  return this.http.put<any>(`${this.apiUrl}AsocNivTecLpsAuto/ActualizarNivel/${id}/${encodedNivel}`, null, this.getHeaders());
+}
+
+// Método para enviar solicitud de eliminado de asociados
+eliminarAsociadoLPS_AUTO(id: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecLpsAuto/EliminarAsociado/${id}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar asociado response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud de eliminado de tecnologias
+eliminarTecnologiaLPS_AUTO(idTecnologia: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecLpsAuto/EliminarTecnologia/${idTecnologia}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar tecnología response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+/*
+        METODOS DE LA MATRIZ WSA
+*/
+
+  //Metodo para obtener los datos importantes de distintas tablas desde el backend
+  public obtenerAsocNivTecWSA(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecWSA`).subscribe(
+        data => {
+          console.log('Datos obtenidos del backend:', data);
+          resolve(data);
+        },
+        error => {
+          console.error('Error al obtener datos del backend:', error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  
+  // Método para obtener tecnologías desde el backend
+  obtenerTecnologiasWSA(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}TecnologiasWSA`);
+  }
+  
+  // Método para obtener los nombres de los procesos desde el backend
+  obtenerNombresProcesosWSA(): Observable<string[]> {
+    const url = `${this.apiUrl}ProcesosWSA/GetNombresProcesos`; 
+    return this.http.get<string[]>(url);
+  }
+
+  // Método asíncrono para obtener niveles específicos desde el backend
+  public obtenerNivWSA(): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.get<any>(`${this.apiUrl}AsocNivTecWSA/GetLevels`).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+
+    })
+  }
+
+  // Método para enviar solicitud para agregar asociados del Head Count a la matriz
+  public AddUserWSA(param: any ): Promise<any> {
+    return new Promise((resolve,reject)=>{
+      return this.http.post<any>(`${this.apiUrl}Hrl2ListaDigitalHeadCount/agregarAsociadosWSA`,param).subscribe(
+        data=>resolve(data),
+        error=>reject(error)
+      )
+    })
+  }
+
+  // Método para enviar solicitud para agregar nuevos procesos
+agregarProcesoWSA(nombreProceso: string): Observable<any> {
+  console.log('Enviando solicitud para agregar proceso:', nombreProceso);
+  const url = `${this.apiUrl}ProcesosWSA`;
+  const body = { nombreProceso: nombreProceso }; // Enviar el nombre de la función con el nombre esperado por el backend
+  return this.http.post(url, body);
+}
+
+  // Método para enviar solicitud para cambiar el proceso de una tecnologia por uno nuevo
+actualizarIdProcesoWSA(params: any): Observable<any> {
+  console.log('Enviando solicitud para cambiar el Id del Proceso:');
+  const url = `${this.apiUrl}TecnologiasWSA/actualizarIdProceso`;
+  return this.http.post(url, params);
+}
+
+// Método para enviar solicitud para actualizar nombres de tecnologías y prioridades
+updateTecnologiaWSA(id: number, cambios: any): Observable<any> {
+  const url = `${this.apiUrl}TecnologiasWSA/${id}`;
+  console.log(`Realizando solicitud HTTP PUT a ${url} con cambios:`, cambios);
+
+  return this.http.put(url, { ...cambios, Id: id }, this.getHeaders())
+    .pipe(
+      tap(response => console.log(`updateTecnologia response:`, response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud para actualizar niveles seleccionados
+actualizarNivelEnBackendWSA(id: number, nuevoNivel: string): Observable<any> {
+  console.log(`Enviando solicitud para actualizar nivel. ID: ${id}, Nuevo Nivel: ${nuevoNivel}`);
+  const encodedNivel = encodeURIComponent(nuevoNivel.replace(/\//g, '%2F'));
+  return this.http.put<any>(`${this.apiUrl}AsocNivTecWSA/ActualizarNivel/${id}/${encodedNivel}`, null, this.getHeaders());
+}
+
+// Método para enviar solicitud de eliminado de asociados
+eliminarAsociadoWSA(id: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecWSA/EliminarAsociado/${id}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar asociado response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+// Método para enviar solicitud de eliminado de tecnologias
+eliminarTecnologiaWSA(idTecnologia: number): Observable<any> {
+  const url = `${this.apiUrl}AsocNivTecWSA/EliminarTecnologia/${idTecnologia}`;
+  return this.http.delete(url, this.getHeaders())
+    .pipe(
+      tap(response => console.log('Eliminar tecnología response:', response)),
+      catchError(this.handleError)
+    );
+}
+
+
+  // Método para manejar errores HTTP
+  private handleError(error: any): Observable<any> {
+    console.error('Error:', error);
+
+    if (error instanceof HttpErrorResponse && error.error) {
+      console.error('Error Response Body:', error.error);
+    }
+
+    return throwError(error); // Retornamos un observable de error
+  }
+
+  // Método para obtener las cabeceras HTTP requeridas
+  private getHeaders() {
+    return {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    };
+  }
+}
