@@ -1,0 +1,32 @@
+.modal-content {
+    display: flex;
+    align-items: center;
+    
+  }
+  .modal-content h1 {
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .modal-b {
+    text-align: center;
+  }
+  .modal-content h1 {
+    margin-bottom: 0;
+}
+.modal-dialog {
+  max-width: 2000px; /* Ajusta el ancho máximo del modal */
+}
+.modal-extra-large {
+max-width: 800px; 
+top: 30%; 
+}
+.modal-header,
+.modal-footer {
+ border: none; 
+}
+.modal-title{
+  text-align: center;
+}
+
+  
