@@ -1,0 +1,15 @@
+{
+    "ConnectionStrings": {
+        //"DatabaseConnection": "Data Source=TL001CLU001.us.bosch.com,1433; Initial Catalog=DB_HRL_COMPENSATIONS_BENEFITS_SQL; User Id=HRL-RW; Password=HarryPotter.5; Integrated Security=false; MultipleActiveResultSets=True"
+        "DatabaseConnection": "Data Source=EV1VSQL04.us.bosch.com\\inst01,56482;Initial Catalog=DB_WEBTTC_SQL;User ID=TTCServerTIP; Password='S9cGw46wpuYqE2j$';TrustServerCertificate=True;",
+        //"DatabaseConnection": "Data Source=TL-C-000XP\\SQLEXPRESS;Initial Catalog=DB_WEBTTC_SQL;Trusted_Connection=True;TrustServerCertificate=True"
+        //"DatabaseConnection": "Server=TL-C-002CH\\SQLEXPRESS;Database=DB_HRL_COMPENSATIONS_BENEFITS_SQL;Trusted_Connection=True;TrustServerCertificate=True"
+    },
+    "Logging": {
+        "LogLevel": {
+            "Default": "Information",
+            "Microsoft.AspNetCore": "Warning"
+        }
+    },
+    "AllowedHosts": "*"
+}
