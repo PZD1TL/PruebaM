@@ -1,0 +1,5 @@
+//Comando para crear el contexto y los modelos de un servidor y base de datos especifica con usuario y contraseña - Ejemplo
+Scaffold-DbContext "Data Source=EV1VSQL04.us.bosch.com\\inst01,56482;Initial Catalog=DB_WEBTTC_SQL;User ID=TTCServerTIP; Password='S9cGw46wpuYqE2j$';TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context NombreDeTuContexto
+
+//Comando para crear el contexto y los modelos de un servidor local - Ejemplo 
+Scaffold-DbContext "Server=TL-C-000XP\SQLEXPRESS;Database=DB_WEBTTC_SQL;Trusted_Connection=True;TrustServerCertificate=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
