@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+
+<title>Matriz AHC</title>
+<head>
+<style>  /* Estilos CSS */
+
+    table {
+      border-collapse: collapse;
+      /* width: 135%; */
+      margin: 30px;
+      margin-top: 10px;
+      /* transform: scale(0.7); 
+      transform-origin: 0 0; */
+    }
+    th, td {
+      border: 2px solid #111;
+      text-align: center;
+      padding: 10px;
+      background-color: rgb(255, 255, 255);
+    }
+    caption {
+      caption-side: top;
+      text-align: center;
+      font-weight: bold;
+      padding: 10px;
+      background-color: navy; 
+      color: white; 
+      font-size: 1.5em;
+    }
+    th {
+      height: 50px; 
+    }
+    td {
+      width: 10%; 
+    }
+    .positionLogo{
+      position: absolute;
+      top: 1.5em; 
+      left: 4.2em;
+    }
+    .contenedor0{
+      margin-top: 55px;
+      background-color: rgb(245, 241, 241);
+    }
+    .contenedor1{
+      width: 100%;
+    }
+    .containerT{
+      overflow-x: visible;
+    }
+    .containerX{
+      overflow-x: auto;
+    }
+   
+</style>
+</head>
+<body>
+
+  <div class="toolbar" role="banner">
+     <!--Linea Bosch-->
+    <img  
+      alt="Color Line"
+      src="http://tl0vm00126.us.bosch.com:97/Images/navTopBar.png" height="15em" width="100%"
+    />
+  <p>
+  </p>  
+     <!--Logo Bosch-->
+    <img
+      alt="Bosch Logo"
+      src="http://tl0vm00126.us.bosch.com:97/Images/BOSCH_RGB.jpeg " class="positionLogo" width="140" height="52"
+    />
+
+    <!--Contenedor principal-->
+    <div class="contenedor0">
+      <div wheel class="contenedor1">
+
+        <!--Seccion para agregar asociados-->
+      <div class="content-wrapper" *ngIf="canViewContentAdmin">
+        <div class="container-fluid">
+          <div class="card" style="margin-top: 10px; margin-bottom: 0px;">
+            <div class="card-header text-white" style="background-color: #2c6e9c; width: 100%; ">
+              <!--Icono y Titulo de la seccion de agregado-->
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person-plus-fill" viewBox="0 0 16 16">
+                <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+              </svg>
+                Gestionar Asociado(s)
+            </span>
+
+             <!--Boton flecha para desplegar opciones de agregado-->
+              <button class="info-btn" (click)="toggleInfo()" style="border: none; background-color: #2c6e9c; color: white; float: right;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-square-fill" viewBox="0 0 16 16">
+                  <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm4 4a.5.5 0 0 0-.374.832l4 4.5a.5.5 0 0 0 .748 0l4-4.5A.5.5 0 0 0 12 6z"/>
+                </svg>
+              </button>
+
+                <!--Contenido desplegable de la seccion de agregado de asociados-->
+                <div #infoDiv class="card-info" style="display: none; ">
+                  <br><p>Seleccione un Asociado:</p>
+
+                  <input type="text" id="searchInput" [(ngModel)]="searchText" (input)="filtrarNombres()" placeholder="Buscar Asociado"><br><br>
+
+                  <select [(ngModel)]="nuevoAsociado" id="NomAsoc" name="AsocOpc">
+                      <ng-container *ngFor="let nombre of nombresAsociados">
+                        <option [value]="nombre.id" *ngIf="nombresFiltrados.includes(nombre)">
+                          {{ nombre.nombre }}
+                        </option>
+                      </ng-container>
+                    </select> <br><br>
+                    
+                    <!--Boton para agregar asociados-->
+                  <button (click)="AddNew()" id="SaveChanges" class="w3-round" style="background-color: #3fa46a; color: white; 
+                    border: none;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16" style="margin-top: -3px;">
+                    <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+                    </svg>  Agregar</button>
+
+                </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--Contenedor de la tabla-->
+      <div class="containerX">
+      <div class="containerT">
+        <table class="Font" wheel>
+          <!--Titulo Tabla-->
+          <caption>MATRIZ AHC</caption>
+          <!--Primera fila (Headers)-->
+          <thead >
+          <tr>
+            <th></th>
+            <th>Descripción de Tecnologias</th>
+            <th></th> 
+
+            <!--Muestra los nombres de los asociados existentes en la tabla de asociados de la base de datos-->
+            <th style="margin-top: 5px;"
+            *ngFor="let a of asocNivTec; let i = index">{{ a[1].asociado }} <br>  
+              <!--Boton para abrir modal de confirmacion de eliminado de asociado-->
+              <button *ngIf="canViewContentAdmin"
+              style="background: #ff2200; color: rgb(255, 255, 255); border-radius: 10px;"
+              (click)="openDeleteModal(a[1].id)"
+              onmouseover="this.style.backgroundColor='#cb1d03'"
+              onmouseout="this.style.backgroundColor='#ff2200'; this.title='Eliminar Asociado'"
+             >
+             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" style="margin-bottom:2px" class="bi bi-person-x-fill" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m6.146-2.854a.5.5 0 0 1 .708 0L14 6.293l1.146-1.147a.5.5 0 0 1 .708.708L14.707 7l1.147 1.146a.5.5 0 0 1-.708.708L14 7.707l-1.146 1.147a.5.5 0 0 1-.708-.708L13.293 7l-1.147-1.146a.5.5 0 0 1 0-.708"/>
+            </svg>
+             </button></th>
+
+          </tr>
+        </thead>
+
+          <!--Segunda fila-->
+          <tr>
+            <td><strong></strong></td>
+            <td><strong>TECNOLOGIA DE ESTACIÓN</strong></td>
+            <td><strong>PRIO</strong></td>
+            <!--Muestra el numero de asociado que le corresponde al asociado de la tabla de Asociados de la base de datos -->
+            <td *ngFor="let asociado of asocNivTec; let i = index">{{ asociado[1].noAsociado }}</td>
+          </tr>
+
+       <!-- Itera sobre cada tecnología y muestra sus detalles en una fila de la tabla -->
+        <ng-container>
+          <ng-container *ngFor="let t of listaprocesos; let i = index">
+            <tr>
+              
+              <!-- Celda para mostrar el nombre del proceso asociado a la tecnología -->
+              <td [ngClass]="{
+                'TEF1': t.proceso.includes('TEF1'),
+                'TEF3': t.proceso.includes('TEF3'),
+                'TEF4': t.proceso.includes('TEF4'),
+                'TEF7': t.proceso.includes('TEF7'),
+                'procesoNormal': !(t.proceso.includes('TEF1') || t.proceso.includes('TEF3') || t.proceso.includes('TEF4') || t.proceso.includes('TEF7') )
+              }">
+                <strong>{{ t.proceso }} </strong>
+               
+                <!--Menu desplegable que despliega los procesos y permite seleccionar uno para cambiarlo por el actual-->
+                 <select *ngIf="canViewContentAdmin" [(ngModel)]="idProcess" (change)="updateProcess(i)" name="opciones" class="menu-desplegable">
+                   <option *ngFor="let p of nombresProcesos; let i = index" [value]="p.IdProceso">{{ p.NombreProceso }}</option>
+                 </select>
+                  <br>
+                   <!--Boton para confirmar el cambio de proceso-->
+                  <button *ngIf="canViewContentAdmin"
+                   style="background: #255c95; color: rgb(255, 255, 255); border-radius: 10px; margin-top: 5px;"
+                   (click)="cambiarProceso(i)"
+                   onmouseover="this.style.backgroundColor='#173a5e'"
+                   onmouseout="this.style.backgroundColor='#255c95'; this.title='Guardar Nueva Categoria'"
+                   >
+                   Cambiar
+                  </button>
+               </td>
+
+              <!-- Celda para el nombre de la tecnología -->
+               <td [style.color]="t.prioridad !== null ? 'red' : 'black'">
+                <!-- Muestra el nombre de la tecnología si no está en modo de edición -->
+                 <span *ngIf="!isEditingTecnologia(i)">{{ t.tecnologia }} <!--{{t.idTecno}}--></span><br>
+                <!-- Input para editar el nombre de la tecnología si está en modo de edición -->
+                 <input *ngIf="isEditingTecnologia(i)" [(ngModel)]="t.tecnologia" />
+                <!-- Botón para iniciar la edición del nombre de la tecnología -->
+                <div *ngIf="canViewContentAdmin">
+                <button 
+                 style="background: #3b8bb0; color: rgb(255, 255, 255); border-radius: 10px;"
+                 *ngIf="!isEditingTecnologia(i)"
+                 (click)="startEditing(i, t.tecnologia)"
+                 onmouseover="this.style.backgroundColor='#2a6c8a'"
+                 onmouseout="this.style.backgroundColor='#3b8bb0'; this.title='Editar Nombre de Tecnologia'">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" style="margin-top: -1px" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                   <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                   <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                 </svg>
+                </button>
+
+                <button *ngIf="canViewContentAdmin"
+                 style="background: #ff2200; color: rgb(255, 255, 255); border-radius: 10px; margin-left: 25px;"
+                 (click)="openDeleteModalTec(t.idTecno, t.tecnologia, i)"
+                 onmouseover="this.style.backgroundColor='#cb1d03'"
+                 onmouseout="this.style.backgroundColor='#ff2200'; this.title='Eliminar Tecnologia'">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16" style="margin-top: -2px;">
+                   <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                   <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+                 </svg>
+                </button>
+
+                <!-- Botón para guardar los cambios en el nombre de la tecnología -->
+                <button 
+                 style="background: #11c769; color: rgb(255, 255, 255); border-radius: 10px; margin-left: 25px;"
+                 *ngIf="isEditingTecnologia(i)"
+                 (click)="updateTecnologia(t.idTecno, t.tecnologia, 1)"
+                 onmouseover="this.style.backgroundColor='#0d9f52'"
+                 onmouseout="this.style.backgroundColor='#11c769'; this.title='Guardar Nombre Tecnologia'">
+                   Guardar
+                </button>
+                </div>
+            
+               </td>
+ 
+              <!-- Celda para la prioridad de la tecnología -->
+               <td  id="red">
+                <!-- Muestra la prioridad de la tecnología si no está en modo de edición -->
+                 <span *ngIf="!isEditingPrioridad(i)">{{ t.prioridad }} </span><br>
+                <!-- Input para editar la prioridad de la tecnología si está en modo de edición -->
+                 <input *ngIf="isEditingPrioridad(i)" [(ngModel)]="t.prioridad" />
+                <!-- Botón para iniciar la edición de la prioridad de la tecnología -->
+                <div *ngIf="canViewContentAdmin">
+                <button 
+                  style="background: #0045a4; color: rgb(255, 255, 255); border-radius: 10px;"
+                  *ngIf="!isEditingPrioridad(i)"
+                  (click)="startEditingPrioridad(i)"
+                   onmouseover="this.style.backgroundColor='#00247a'"
+                   onmouseout="this.style.backgroundColor='#0045a4'; this.title='Editar Prioridad'">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" style="margin-top: -1px" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                  <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                  <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                 </svg>
+                </button>
+              </div>
+ 
+                <!-- Botón para guardar los cambios en la prioridad de la tecnología -->
+                <button 
+                  style="background: #11c769; color: rgb(255, 255, 255); border-radius: 10px;"
+                  *ngIf="isEditingPrioridad(i)"
+                  (click)="updateTecnologia(t.idTecno, t.prioridad, 2)"
+                  onmouseover="this.style.backgroundColor='#0d9f52'"
+                  onmouseout="this.style.backgroundColor='#11c769'; this.title='Guardar Valor de Prioridad'">
+                  Guardar
+                </button>
+              
+               </td>
+ 
+               <!-- Utiliza *ngFor para iterar sobre las celdas asociadas a la tecnologia -->
+               <ng-container *ngFor="let j of asocNivTec; let k = index">
+
+               <!-- <td class="contenedor" [ngStyle]="{'background-color': getColorCelda(optionSelected)}"> -->
+
+                 <td class="contenedor" [ngStyle]="{}">
+                  <!--Mostrar los niveles correspondientes a los usuarios-->
+                  <span class="texto-l">{{j[i].nivel}} </span>
+                  <!--Mostrar flecha y el nivel seleccionado al escoger una opcion-->
+                  <ng-container *ngIf="validacion(j[i].nivel, k, i)">
+                    ----> {{register[k][i].nivel}} 
+                  </ng-container>
+                  <!--Menu desplegable que permite seleccionar un nuevo nivel para cambiarlo por el ctual-->
+                  <select [(ngModel)]="optionSelected" name="opciones" class="menu-desplegable hover-dropdown"
+                    (change)="cambiarNivel(optionSelected, i , k)" title="Seleccionar Nuevo Nivel">
+                     <option value="" disabled selected></option>
+                     <option *ngFor="let opcion of obtenerOpcionesSelect()" [value]="opcion.label">{{ opcion.label }}</option>
+                  </select>
+                 </td>
+                </ng-container>
+ 
+            </tr>
+          </ng-container>
+          
+        </ng-container>
+         
+        </table>
+
+        <!-- Boton que habilita el input para agregar un nuevo proceso-->
+       <button *ngIf="canViewContentAdmin" (click)="toggleInputField()" type="button" id="BotonP" class=" btn btn-lg" 
+       style="background-color: #255c95; color: white; border: none; margin-left: 20px;"
+       onmouseover="this.style.backgroundColor='#173a5e'"
+       onmouseout="this.style.backgroundColor='#255c95'; this.title='Escribir Nueva Categoria'">
+        Agregar Categoria
+      </button>
+
+        <!-- Boton para abrir el modal de llenado de datos para agregar una nueva tecnologia-->
+        <button *ngIf="canViewContentAdmin" (click)="openTechnoModal()" type="button" id="BotonT" class=" btn btn-lg" 
+        style="background-color: #3b8bb0; color: white; border: none; margin-left: 20px; "
+        onmouseover="this.style.backgroundColor='#2a6c8a'"
+        onmouseout="this.style.backgroundColor='#3b8bb0'; this.title='Agregar Nueva Tecnologia'">
+         Agregar Tecnologia
+        </button>
+
+        <!-- Boton para abrir el modal de confirmacion de guardado de cambios realizados en los niveles-->
+        <button (click)="openConfirmationModal()" type="button" id="BotonN" class=" btn btn-lg" 
+         style="background-color: #05c759; color: white; border: none; margin-left: 20px;"
+         onmouseover="this.style.backgroundColor='#04a148'"
+         onmouseout="this.style.backgroundColor='#05c759'; this.title='Guardar Cambios Niveles'">
+          Guardar Niveles
+        </button>
+
+        <!--Input para escribir el nuevo proceso-->
+       <input type="text" [(ngModel)]="nuevoProceso" [hidden]="!mostrarCampo" placeholder="Ingrese el nombre de la categoria"
+       style="padding: 8px; border: 1px solid #12d660; border-radius: 4px; width: 300px; margin-left: 30px;">
+
+        <!-- Boton para confirmar el agregado del nuevo proceso-->
+       <button (click)="agregarProceso()" [hidden]="!mostrarCampo" type="button" class=" btn btn-lg" 
+         style="background-color: #2bca9d; color: white; border: none; margin-left: 0px; margin-top: -4px;"
+         onmouseover="this.style.backgroundColor='#219675'"
+         onmouseout="this.style.backgroundColor='#2bca9d'; this.title='Agregar Nueva Categoria'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+        </svg>
+       </button>
+
+      
+      </div>
+      </div>
+      </div>
+
+     
+    </div>
+
+</div>
+
+</body>
+</html>
