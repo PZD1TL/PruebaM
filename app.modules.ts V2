@@ -1,0 +1,117 @@
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule, Routes } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { AppComponent } from './app.component';
+import { MatrizCAFPGComponent } from './matriz-ca-fpg/matriz-ca-fpg.component';
+import { HomePageComponent } from './home-page/home-page.component';
+import { MatrizMaqsWsSComponent } from './matriz-maqs-ws-s/matriz-maqs-ws-s.component';
+import { ErrorComponent } from './error/error.component';
+import { environment } from '../environments/environment';
+import { HttpClientModule } from '@angular/common/http';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { ConfirmationModalComponent } from './confirmation-modal/confirmation-modal.component';
+import { SuccessModalComponent } from './success-modal/success-modal.component';
+import { ErrorModalComponent } from './error-modal/error-modal.component';
+import { WheelDirective } from './wheel.directive';
+import { DeleteModalComponent } from './delete-modal/delete-modal.component';
+import { AddTechnoModalComponent } from './add-techno-modal/add-techno-modal.component';
+import { MatrizMseShComponent } from './matriz-mse-sh/matriz-mse-sh.component';
+import { MatrizL751Component } from './matriz-l-751/matriz-l-751.component';
+import { MatrizLPSSemiautoComponent } from './matriz-lps-semiauto/matriz-lps-semiauto.component';
+import { MatrizLPSAutoComponent } from './matriz-lps-auto/matriz-lps-auto.component';
+import { MatrizWSAComponent } from './matriz-wsa/matriz-wsa.component';
+import { MatrizWSMMOTORESComponent } from './matriz-wsm-motores/matriz-wsm-motores.component'; 
+import { authGuard } from './guard/auth.guard';
+import { MatrizWsmInducidosComponent } from './matriz-wsm-inducidos/matriz-wsm-inducidos.component';
+import { MatrizCoComponent } from './matriz-co/matriz-co.component';
+import { MatrizAhcComponent } from './matriz-ahc/matriz-ahc.component';
+import { MatrizL753Component } from './matriz-l-753/matriz-l-753.component';
+import { MatrizPaComponent } from './matriz-pa/matriz-pa.component';
+import { MatrizWaaComponent } from './matriz-waa/matriz-waa.component';
+import { MatrizMotoresGpgComponent } from './matriz-motores-gpg/matriz-motores-gpg.component';
+import { MatrizMaqsFedComponent } from './matriz-maqs-fed/matriz-maqs-fed.component';
+import { MatrizModulosGbmComponent } from './matriz-modulos-gbm/matriz-modulos-gbm.component';
+import { MatrizInducidosGpgComponent } from './matriz-inducidos-gpg/matriz-inducidos-gpg.component';
+import { MatrizMotoresGbmComponent } from './matriz-motores-gbm/matriz-motores-gbm.component';
+import { MatrizInducidosGbmComponent } from './matriz-inducidos-gbm/matriz-inducidos-gbm.component';
+import { MatrizModulosEcfComponent } from './matriz-modulos-ecf/matriz-modulos-ecf.component';
+import { MatrizMaqsPadComponent } from './matriz-maqs-pad/matriz-maqs-pad.component';
+import { MatrizValvulaCsvComponent } from './matriz-valvula-csv/matriz-valvula-csv.component';
+
+const routes: Routes = [
+  { path: '', redirectTo: '/home', pathMatch: 'full' }, // Redirige a la ruta de la pagina principal por defecto
+  { path: 'home', component: HomePageComponent, canActivate: [authGuard] }, 
+  { path: 'matriz-MSE-SH', component: MatrizMseShComponent, canActivate: [authGuard] },
+  { path: 'matriz-L751', component: MatrizL751Component, canActivate: [authGuard] },
+  { path: 'matriz-MAQS-WS-S', component: MatrizMaqsWsSComponent, canActivate: [authGuard] },
+  { path: 'matriz-CA-FPG', component: MatrizCAFPGComponent, canActivate: [authGuard] },
+  { path: 'matriz-LPS-SEMIAUTOMATICA', component: MatrizLPSSemiautoComponent, canActivate: [authGuard] },
+  { path: 'matriz-LPS-AUTOMATICAS', component: MatrizLPSAutoComponent, canActivate: [authGuard] },
+  { path: 'matriz-WSA', component: MatrizWSAComponent, canActivate: [authGuard] },
+  { path: 'matriz-WSM-MOTORES', component: MatrizWSMMOTORESComponent, canActivate: [authGuard] },
+  { path: 'matriz-WSM-INDUCIDOS', component: MatrizWsmInducidosComponent, canActivate: [authGuard] },
+  { path: 'matriz-CO', component: MatrizCoComponent, canActivate: [authGuard] },
+  { path: 'matriz-AHC', component: MatrizAhcComponent, canActivate: [authGuard] },
+  { path: 'matriz-L753', component: MatrizL753Component, canActivate: [authGuard] },
+  { path: 'matriz-PA', component: MatrizPaComponent, canActivate: [authGuard] },
+  { path: 'matriz-WAA', component: MatrizWaaComponent, canActivate: [authGuard] },
+  { path: 'matriz-MOTORES-GPG', component: MatrizMotoresGpgComponent, canActivate: [authGuard] },
+  { path: 'matriz-MAQS-FED', component: MatrizMaqsFedComponent, canActivate: [authGuard] },
+  { path: 'matriz-MODULOS-GBM', component: MatrizModulosGbmComponent, canActivate: [authGuard] },
+  { path: 'matriz-INDUCIDOS-GPG', component: MatrizInducidosGpgComponent, canActivate: [authGuard] },
+  { path: 'matriz-MOTORES-GBM', component: MatrizMotoresGbmComponent, canActivate: [authGuard] },
+  { path: 'matriz-INDUCIDOS-GBM', component: MatrizInducidosGbmComponent, canActivate: [authGuard] },
+  { path: 'matriz-MODULOS-ECF', component: MatrizModulosEcfComponent, canActivate: [authGuard] },
+  { path: 'matriz-MAQS-PAD', component: MatrizMaqsPadComponent, canActivate: [authGuard] },
+  { path: 'matriz-VALVULA-CSV', component: MatrizValvulaCsvComponent, canActivate: [authGuard] },
+  { path: 'error', component: ErrorComponent },
+
+];
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    MatrizCAFPGComponent,
+    HomePageComponent,
+    MatrizMaqsWsSComponent,
+    ErrorComponent,
+    ConfirmationModalComponent,
+    SuccessModalComponent,
+    ErrorModalComponent,
+    WheelDirective,
+    DeleteModalComponent,
+    AddTechnoModalComponent,
+    MatrizMseShComponent,
+    MatrizL751Component,
+    MatrizLPSSemiautoComponent,
+    MatrizLPSAutoComponent,
+    MatrizWSAComponent,
+    MatrizWSMMOTORESComponent,
+    MatrizWsmInducidosComponent,
+    MatrizCoComponent,
+    MatrizAhcComponent,
+    MatrizL753Component,
+    MatrizPaComponent,
+    MatrizWaaComponent,
+    MatrizMotoresGpgComponent,
+    MatrizMaqsFedComponent,
+    MatrizModulosGbmComponent,
+    MatrizInducidosGpgComponent,
+    MatrizMotoresGbmComponent,
+    MatrizInducidosGbmComponent,
+    MatrizModulosEcfComponent,
+    MatrizMaqsPadComponent,
+    MatrizValvulaCsvComponent
+  ],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    FormsModule,
+    RouterModule.forRoot(routes),
+    NgbModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
